@@ -145,6 +145,21 @@ export function getMe() {
   return apiRequest('/api/me');
 }
 
+export function getServiceCommandCenterSummary(slug) {
+  return apiRequest(`/api/services/${encodeURIComponent(slug)}/command-center`);
+}
+
+export function getServiceLaneDetail(slug, laneId) {
+  return apiRequest(`/api/services/${encodeURIComponent(slug)}/lanes/${encodeURIComponent(laneId)}`);
+}
+
+export function createServiceLaneActionIntent(slug, laneId, payload = {}) {
+  return apiRequest(`/api/services/${encodeURIComponent(slug)}/lanes/${encodeURIComponent(laneId)}/actions`, {
+    method: 'POST',
+    body: payload
+  });
+}
+
 export function login(email, password) {
   return apiRequest('/api/auth/login', {
     method: 'POST',
@@ -271,6 +286,10 @@ export function listPaymentProviders() {
   return apiRequest('/api/admin/payment-providers');
 }
 
+export function listPaymentProviderHealth() {
+  return apiRequest('/api/admin/payment-providers/health');
+}
+
 export function listPaymentProviderInvoiceFeatures() {
   return apiRequest('/api/admin/payment-providers/invoice-features');
 }
@@ -353,6 +372,17 @@ export function listPaymentOpsIssues(params = {}) {
 
 export function listAdminWebhookEvents(params = {}) {
   return apiRequest(`/api/admin/webhooks${buildQuery(params)}`);
+}
+
+export function listDeadLetterJobs(params = {}) {
+  return apiRequest(`/api/admin/dead-letters${buildQuery(params)}`);
+}
+
+export function recoverDeadLetterJob(jobId, note) {
+  return apiRequest(`/api/admin/dead-letters/${encodeURIComponent(jobId)}/recover`, {
+    method: 'POST',
+    body: note ? { note } : {}
+  });
 }
 
 export function getAdminWebhookEvent(webhookEventId) {

@@ -38,8 +38,8 @@ export default function ServicesPage() {
   const { config, profile } = useAppContext();
   const brand = config?.brand_color || '#f8812d';
   const aiReply = getServiceBySlug('ai-reply');
-  const scriptsGroup = serviceGroups.find((group) => group.title === 'Scripts');
-  const standardGroups = serviceGroups.filter((group) => group.title !== 'Scripts');
+  const scriptsGroup = serviceGroups.find((group) => group.title === 'Template Marketplace');
+  const standardGroups = serviceGroups.filter((group) => group.title !== 'Template Marketplace');
   const scriptService = scriptsGroup ? getServicesByGroup(scriptsGroup)[0] : null;
 
   return (
@@ -90,12 +90,12 @@ export default function ServicesPage() {
               >
                 <div className="space-y-1">
                   <div className="flex items-center gap-3">
-                    <Badge tone={group.title === 'Flash Emails' ? 'orange' : 'slate'}>{group.title}</Badge>
+                    <Badge tone={group.title === 'Verified Notifications' ? 'orange' : 'slate'}>{group.title}</Badge>
                   </div>
                   <h2 className="text-xl font-black tracking-[-0.03em] text-slate-950">{group.title}</h2>
                 </div>
 
-                <div className={`mt-5 grid gap-3 ${group.title === 'Flash Emails' ? 'md:grid-cols-2 xl:grid-cols-3' : group.title === 'Featured' ? 'md:grid-cols-2 xl:grid-cols-3' : 'md:grid-cols-3'}`}>
+                <div className={`mt-5 grid gap-3 ${group.title === 'Verified Notifications' ? 'md:grid-cols-2 xl:grid-cols-3' : group.title === 'Featured' ? 'md:grid-cols-2 xl:grid-cols-3' : 'md:grid-cols-3'}`}>
                   {services.map((service) => (
                     <Link
                       key={service.slug}
@@ -127,12 +127,12 @@ export default function ServicesPage() {
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">
                     <Sparkles size={14} />
-                    Scripts
+                    Templates
                   </div>
-                  <h2 className="text-xl font-black tracking-[-0.03em] text-slate-950">Scripts</h2>
+                  <h2 className="text-xl font-black tracking-[-0.03em] text-slate-950">Template Marketplace</h2>
                 </div>
                 <Link to={scriptService.launchTo} className="text-sm font-black text-slate-700 transition hover:text-slate-950">
-                  View Purchases
+                  Open Marketplace
                 </Link>
               </div>
 
@@ -150,10 +150,10 @@ export default function ServicesPage() {
                   </div>
                   <div className="flex flex-wrap items-center gap-3">
                     <span className="rounded-full bg-slate-900 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-white">
-                      95,000 pts
+                      Premium
                     </span>
                     <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
-                      23 sales
+                      Ops-ready
                     </span>
                     <span className="inline-flex items-center gap-2 text-sm font-black text-slate-700">
                       View Details

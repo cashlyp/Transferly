@@ -190,9 +190,31 @@ function presentDeadLetterJob(job) {
     attempts_made: job.attempts_made,
     failed_reason: job.failed_reason,
     queue_name: job.queue_name,
+    source_queue: job.source_queue || null,
+    source_job_id: job.source_job_id || null,
+    recovery: job.recovery || null,
     data: job.data,
     created_at: job.created_at,
     finished_at: job.finished_at
+  };
+}
+
+function presentProviderHealthReport(report) {
+  return {
+    generated_at: report.generated_at,
+    data: report.data.map((provider) => ({
+      provider: provider.provider,
+      display_name: provider.display_name,
+      provider_status: provider.provider_status,
+      score: provider.score,
+      status: provider.status,
+      failed_webhooks: provider.failed_webhooks,
+      recent_webhooks: provider.recent_webhooks,
+      unresolved_issues: provider.unresolved_issues,
+      last_webhook_at: provider.last_webhook_at,
+      reasons: provider.reasons || [],
+      next_actions: provider.next_actions || []
+    }))
   };
 }
 
@@ -263,6 +285,7 @@ module.exports = {
   presentWebhookEvent,
   presentWebhookEventDetail,
   presentFundRelease,
+  presentProviderHealthReport,
   presentQueueOverview,
   presentDeadLetterJob
 };

@@ -6,15 +6,19 @@ import {
   BarChart3,
   Bell,
   Bot,
+  CheckCircle2,
+  ChevronDown,
   Clock3,
   Copy,
+  CreditCard,
   FileText,
   Gauge,
   History,
+  Layers3,
   LifeBuoy,
   LockKeyhole,
-  MessageCircle,
   Receipt,
+  Search,
   Settings,
   Send,
   ShieldCheck,
@@ -44,6 +48,7 @@ import {
 } from '../components/MiniAppFinanceSuite';
 import { useAppContext } from '../context/AppContext';
 import { useTelegramMiniApp } from '../context/TelegramMiniAppContext';
+import { dashboardPreviewSlugs, getServiceBySlug } from '../lib/servicesCatalog';
 
 const sectionMeta = {
   home: {
@@ -150,6 +155,125 @@ const defaultScreenOptions = [
   { id: 'support', label: 'Support', to: '/miniapp/support', icon: LifeBuoy }
 ];
 
+const providerHighlights = ['paypal', 'stripe', 'paystack', 'flutterwave', 'crypto', 'wise']
+  .map((slug) => getServiceBySlug(slug))
+  .filter(Boolean);
+
+const miniAppServiceHighlights = dashboardPreviewSlugs
+  .map((slug) => getServiceBySlug(slug))
+  .filter(Boolean)
+  .slice(0, 10);
+
+const launchSteps = [
+  {
+    icon: Bot,
+    title: 'Open the bot',
+    body: 'Start in Telegram with /start or /miniapp so identity, access, and launch context stay native.'
+  },
+  {
+    icon: Smartphone,
+    title: 'Launch the miniapp',
+    body: 'Jump directly into Studio, Vault, Wallet, Providers, or Support without web login screens.'
+  },
+  {
+    icon: Layers3,
+    title: 'Operate faster',
+    body: 'Use receipt tools, points, provider status, activity, and support context from one mobile workspace.'
+  }
+];
+
+const marketplaceLanes = [
+  {
+    title: 'Verified Wallets',
+    body: 'Opay, Kuda, and Palmpay wallet-record flows with guided detail capture and point-aware generation.',
+    to: '/miniapp/studio',
+    icon: WalletCards,
+    badge: 'Records'
+  },
+  {
+    title: 'Verified Notifications',
+    body: 'Provider-styled notification receipts for PayPal, Binance, Bybit, Coinbase, Cash App, Zelle, Venmo, Trust Wallet, and GCash.',
+    to: '/miniapp/studio',
+    icon: Bell,
+    badge: 'Receipts'
+  },
+  {
+    title: 'Receipt Vault',
+    body: 'Search, duplicate, preview, export, and hand off generated receipts with support-ready context.',
+    to: '/miniapp/vault',
+    icon: History,
+    badge: 'Archive'
+  },
+  {
+    title: 'Support Desk',
+    body: 'Launch guided help with current screen, Telegram identity, order, receipt, and provider context attached.',
+    to: '/miniapp/support',
+    icon: LifeBuoy,
+    badge: 'Handoff'
+  },
+  {
+    title: 'Security Center',
+    body: 'Review session posture, account linking, export controls, audit posture, and sensitive workflow checks.',
+    to: '/miniapp/security',
+    icon: LockKeyhole,
+    badge: 'Safe'
+  },
+  {
+    title: 'Provider Command',
+    body: 'Monitor readiness, balances, webhook health, issue triage, invoices, and payouts for supported rails.',
+    to: '/miniapp/ops',
+    icon: ShieldCheck,
+    badge: 'Ops'
+  },
+  {
+    title: 'Payment QR',
+    body: 'Prepare mobile-first payment QR and studio launch flows for fast customer collection workflows.',
+    to: '/miniapp/studio',
+    icon: CreditCard,
+    badge: 'Collect'
+  },
+  {
+    title: 'Payment Links',
+    body: 'Track payment-link activity and shorten customer-facing flows from the unified activity timeline.',
+    to: '/miniapp/activity',
+    icon: Copy,
+    badge: 'Links'
+  },
+  {
+    title: 'Template Marketplace',
+    body: 'Surface premium workflow templates and reusable operator playbooks for repeatable service delivery.',
+    to: '/services',
+    icon: Star,
+    badge: 'Premium'
+  },
+  {
+    title: 'Sandbox Test Data',
+    body: 'Generate clearly marked sandbox data for demos, QA, support rehearsals, and safe operator training.',
+    to: '/services/faker-data',
+    icon: CheckCircle2,
+    badge: 'Sandbox'
+  }
+];
+
+const supportFaqs = [
+  {
+    question: 'How do I open Transferly without login/register?',
+    answer: 'Use the Telegram bot launch buttons. The miniapp reads Telegram context and routes you into the right workspace.'
+  },
+  {
+    question: 'Where do I top up or review points?',
+    answer: 'Open Wallet from the miniapp. Support context includes latest order and point balance for faster follow-up.'
+  },
+  {
+    question: 'Where are generated receipts stored?',
+    answer: 'Open Vault for searchable history, duplication, preview, export, and support handoff details.'
+  },
+  {
+    question: 'How do provider issues get escalated?',
+    answer: 'Open Providers or Support. The support bundle includes runtime, account, order, receipt, and open issue counts.'
+  }
+];
+
 function readStoredMiniAppSetting(key, fallback) {
   if (typeof window === 'undefined') {
     return fallback;
@@ -215,6 +339,190 @@ function ActionCard({ icon: Icon, title, body, to, badge, accent = false }) {
   );
 }
 
+function ServiceRail({ services }) {
+  if (!services.length) {
+    return null;
+  }
+
+  const railItems = [...services, ...services];
+
+  return (
+    <section className="overflow-hidden rounded-[30px] bg-[var(--tg-section-bg-color)] p-5 shadow-sm">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--tg-hint-color)]">Service catalog</p>
+          <h3 className="mt-2 text-2xl font-black tracking-[-0.04em] text-[var(--tg-text-color)]">Telegram-ready launch lanes</h3>
+        </div>
+        <Link
+          to="/services"
+          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[18px] bg-[var(--tg-secondary-bg-color)] text-[var(--tg-button-color)] transition active:scale-95"
+          aria-label="Open service catalog"
+        >
+          <ArrowRight size={18} />
+        </Link>
+      </div>
+      <div className="relative mt-5">
+        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-[var(--tg-section-bg-color)] to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-[var(--tg-section-bg-color)] to-transparent" />
+        <div className="flex w-max gap-3 motion-safe:animate-[transferlyServiceRail_38s_linear_infinite]">
+          {railItems.map((service, index) => (
+            <Link
+              key={`${service.slug}-${index}`}
+              to="/miniapp/studio"
+              className="flex w-56 shrink-0 items-center gap-3 rounded-[24px] bg-[var(--tg-secondary-bg-color)] p-3 text-[var(--tg-text-color)] transition active:scale-[0.99]"
+            >
+              <span
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] text-sm font-black"
+                style={{
+                  backgroundColor: service.accent?.bg || 'var(--tg-button-color)',
+                  color: service.accent?.fg || 'var(--tg-button-text-color)'
+                }}
+              >
+                {service.mark || service.title.slice(0, 2).toUpperCase()}
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate text-sm font-black">{service.title}</span>
+                <span className="mt-0.5 block truncate text-xs font-bold text-[var(--tg-hint-color)]">{service.category}</span>
+              </span>
+            </Link>
+          ))}
+        </div>
+      </div>
+      <style>{`
+        @keyframes transferlyServiceRail {
+          from { transform: translateX(0); }
+          to { transform: translateX(-50%); }
+        }
+      `}</style>
+    </section>
+  );
+}
+
+function LaunchPath() {
+  return (
+    <section className="rounded-[30px] bg-[var(--tg-section-bg-color)] p-5 shadow-sm">
+      <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-[var(--tg-hint-color)]">
+        <Bot size={15} />
+        Bot-first access
+      </div>
+      <div className="mt-4 grid gap-3 md:grid-cols-3">
+        {launchSteps.map((step, index) => {
+          const Icon = step.icon;
+          return (
+            <div key={step.title} className="rounded-[24px] bg-[var(--tg-secondary-bg-color)] p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-[18px] bg-[var(--tg-button-color)] text-[var(--tg-button-text-color)]">
+                  <Icon size={20} />
+                </div>
+                <span className="text-xs font-black text-[var(--tg-hint-color)]">0{index + 1}</span>
+              </div>
+              <h3 className="mt-4 text-lg font-black tracking-[-0.03em] text-[var(--tg-text-color)]">{step.title}</h3>
+              <p className="mt-2 text-sm leading-6 text-[var(--tg-subtitle-text-color)]">{step.body}</p>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function ProviderDock() {
+  if (!providerHighlights.length) {
+    return null;
+  }
+
+  return (
+    <section className="rounded-[30px] bg-[var(--tg-section-bg-color)] p-5 shadow-sm">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--tg-hint-color)]">Provider cockpit</p>
+          <h3 className="mt-2 text-2xl font-black tracking-[-0.04em] text-[var(--tg-text-color)]">Live provider shortcuts</h3>
+        </div>
+        <Link
+          to="/miniapp/ops"
+          className="inline-flex items-center justify-center gap-2 rounded-[18px] bg-[var(--tg-button-color)] px-4 py-3 text-xs font-black text-[var(--tg-button-text-color)] transition active:scale-95"
+        >
+          Open
+          <ArrowRight size={15} />
+        </Link>
+      </div>
+      <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {providerHighlights.map((provider) => (
+          <Link
+            key={provider.slug}
+            to="/miniapp/ops"
+            className="rounded-[24px] bg-[var(--tg-secondary-bg-color)] p-4 transition active:scale-[0.99]"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <span
+                className="flex h-11 w-11 items-center justify-center rounded-[17px] text-sm font-black"
+                style={{
+                  backgroundColor: provider.accent?.bg || 'var(--tg-button-color)',
+                  color: provider.accent?.fg || 'var(--tg-button-text-color)'
+                }}
+              >
+                {provider.mark}
+              </span>
+              <span className="rounded-full bg-[var(--tg-section-bg-color)] px-2 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[var(--tg-hint-color)]">
+                {provider.badge}
+              </span>
+            </div>
+            <h4 className="mt-4 truncate text-base font-black tracking-[-0.025em] text-[var(--tg-text-color)]">{provider.title}</h4>
+            <p className="mt-1 truncate text-xs font-bold text-[var(--tg-hint-color)]">{provider.category}</p>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function MarketplaceBoard() {
+  return (
+    <section className="rounded-[30px] bg-[var(--tg-section-bg-color)] p-5 shadow-sm">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--tg-hint-color)]">Premium service marketplace</p>
+          <h3 className="mt-2 text-2xl font-black tracking-[-0.04em] text-[var(--tg-text-color)]">All Transferly launch lanes</h3>
+        </div>
+        <Link
+          to="/services"
+          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[18px] bg-[var(--tg-secondary-bg-color)] text-[var(--tg-button-color)] transition active:scale-95"
+          aria-label="Open full marketplace"
+        >
+          <ArrowRight size={18} />
+        </Link>
+      </div>
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        {marketplaceLanes.map((lane) => {
+          const Icon = lane.icon;
+          return (
+            <Link
+              key={lane.title}
+              to={lane.to}
+              className="group rounded-[24px] bg-[var(--tg-secondary-bg-color)] p-4 text-[var(--tg-text-color)] transition active:scale-[0.99]"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[17px] bg-[var(--tg-section-bg-color)] text-[var(--tg-button-color)]">
+                  <Icon size={20} />
+                </span>
+                <span className="rounded-full bg-[var(--tg-section-bg-color)] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[var(--tg-hint-color)]">
+                  {lane.badge}
+                </span>
+              </div>
+              <h4 className="mt-4 text-base font-black tracking-[-0.025em]">{lane.title}</h4>
+              <p className="mt-2 line-clamp-3 text-sm leading-6 text-[var(--tg-subtitle-text-color)]">{lane.body}</p>
+              <div className="mt-4 inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.14em] text-[var(--tg-button-color)]">
+                Open
+                <ArrowRight size={14} className="transition group-hover:translate-x-0.5" />
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 function HeroPanel({ profile, telegram, receipts, topUpOrders }) {
   const firstName = telegram.user?.first_name || profile?.name?.split(' ')?.[0] || 'Operator';
   const latestOrder = topUpOrders[0];
@@ -251,6 +559,10 @@ function HomeSection({ profile, telegram, receipts, topUpOrders }) {
   return (
     <div className="space-y-4">
       <HeroPanel profile={profile} telegram={telegram} receipts={receipts} topUpOrders={topUpOrders} />
+      <ServiceRail services={miniAppServiceHighlights} />
+      <LaunchPath />
+      <ProviderDock />
+      <MarketplaceBoard />
 
       <div className="grid gap-3 sm:grid-cols-2">
         <ActionCard
@@ -362,6 +674,8 @@ function buildSupportContext({ source, telegram, profile, user, receipts, topUpO
 
 function SupportSection({ telegram, profile, user, receipts, topUpOrders, paymentIssues }) {
   const location = useLocation();
+  const [query, setQuery] = useState('');
+  const [openQuestion, setOpenQuestion] = useState(supportFaqs[0]?.question || '');
   const supportContext = useMemo(() => {
     const params = new URLSearchParams(location.search);
     return buildSupportContext({
@@ -393,6 +707,18 @@ function SupportSection({ telegram, profile, user, receipts, topUpOrders, paymen
       onClick: copyContext
     });
   }, [copyContext, telegram]);
+
+  const filteredFaqs = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    if (!needle) {
+      return supportFaqs;
+    }
+
+    return supportFaqs.filter((faq) => {
+      const haystack = `${faq.question} ${faq.answer}`.toLowerCase();
+      return haystack.includes(needle);
+    });
+  }, [query]);
 
   return (
     <div className="space-y-4">
@@ -429,9 +755,59 @@ function SupportSection({ telegram, profile, user, receipts, topUpOrders, paymen
           </button>
         </div>
       </section>
+      <section className="rounded-[30px] bg-[var(--tg-section-bg-color)] p-5 shadow-sm">
+        <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-[var(--tg-hint-color)]">
+          <Search size={15} />
+          Help search
+        </div>
+        <label className="mt-4 flex items-center gap-3 rounded-[22px] bg-[var(--tg-secondary-bg-color)] px-4 py-3">
+          <Search size={18} className="text-[var(--tg-hint-color)]" />
+          <input
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search support topics"
+            className="min-w-0 flex-1 bg-transparent text-sm font-bold text-[var(--tg-text-color)] outline-none placeholder:text-[var(--tg-hint-color)]"
+          />
+        </label>
+        <div className="mt-4 space-y-2">
+          {filteredFaqs.length ? filteredFaqs.map((faq) => {
+            const open = openQuestion === faq.question;
+            return (
+              <button
+                key={faq.question}
+                type="button"
+                onClick={() => setOpenQuestion(open ? '' : faq.question)}
+                className="w-full rounded-[22px] bg-[var(--tg-secondary-bg-color)] p-4 text-left transition active:scale-[0.99]"
+                aria-expanded={open}
+              >
+                <span className="flex items-start justify-between gap-3">
+                  <span className="flex min-w-0 items-start gap-3">
+                    <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-[var(--tg-button-color)]" />
+                    <span className="text-sm font-black leading-6 text-[var(--tg-text-color)]">{faq.question}</span>
+                  </span>
+                  <ChevronDown
+                    size={18}
+                    className={`mt-1 shrink-0 text-[var(--tg-hint-color)] transition ${open ? 'rotate-180' : ''}`}
+                  />
+                </span>
+                {open ? (
+                  <span className="mt-3 block pl-8 text-sm leading-6 text-[var(--tg-subtitle-text-color)]">
+                    {faq.answer}
+                  </span>
+                ) : null}
+              </button>
+            );
+          }) : (
+            <div className="rounded-[22px] bg-[var(--tg-secondary-bg-color)] p-4 text-sm font-bold text-[var(--tg-hint-color)]">
+              No support topics matched. Copy the support context and send it to the bot/admin.
+            </div>
+          )}
+        </div>
+      </section>
       <div className="grid gap-3 sm:grid-cols-2">
-        <ActionCard icon={MessageCircle} title="Funding issue" body="Report point release problems with order context." to="/buy-point" badge="Points" />
-        <ActionCard icon={Receipt} title="Receipt issue" body="Open history, choose a receipt, and attach details." to="/transactions" badge="Vault" />
+        <ActionCard icon={CreditCard} title="Funding issue" body="Review wallet orders, point release state, and funding context." to="/miniapp/wallet" badge="Points" />
+        <ActionCard icon={Receipt} title="Receipt issue" body="Open vault, choose a receipt, and attach details." to="/miniapp/vault" badge="Vault" />
         <ActionCard icon={Bot} title="Bot access" body="Check Telegram identity and access state before support escalation." to="/miniapp/profile" badge={telegram.available ? 'Verified' : 'Preview'} />
         <ActionCard icon={LifeBuoy} title="Help center" body="Use the existing FAQ and help page while Mini App support grows." to="/help" badge="FAQ" />
       </div>

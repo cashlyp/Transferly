@@ -20,9 +20,9 @@ function receiptSummary(receipt) {
   }
 
   return {
-    title: data.subject || 'Email receipt',
+    title: data.subject || 'Notification receipt',
     meta: `${data.fromEmail || 'From'} -> ${data.toEmail || 'To'}`,
-    amount: 'Flash mail',
+    amount: 'Notification',
     status: 'Sent'
   };
 }
@@ -183,8 +183,8 @@ export default function HistoryPage() {
             <div className="grid gap-3 sm:grid-cols-3">
               {[
                 { label: 'All receipts', value: stats.total },
-                { label: 'Bank slips', value: stats.bank },
-                { label: 'Flash mails', value: stats.email },
+                { label: 'Wallet records', value: stats.bank },
+                { label: 'Notifications', value: stats.email },
                 { label: 'Funding orders', value: stats.topup }
               ].map((item) => (
                 <div key={item.label} className="rounded-[24px] border border-white/8 bg-white/6 p-4">
@@ -225,8 +225,8 @@ export default function HistoryPage() {
                 className="w-full rounded-2xl border border-[#e6ddd0] bg-[#faf7f1] px-4 py-3 text-sm text-slate-950 outline-none transition focus:border-[#f2c39a]"
               >
                 <option value="all">All activity</option>
-                <option value="bank">Bank slip</option>
-                <option value="email">Flash mail</option>
+                <option value="bank">Wallet record</option>
+                <option value="email">Notification</option>
                 <option value="topup">Top up order</option>
               </select>
             </label>
@@ -300,7 +300,7 @@ export default function HistoryPage() {
                             color: brand
                           }}
                         >
-                          {isTopUp ? 'Top up order' : receipt.type === 'bank' ? 'Bank slip' : 'Flash mail'}
+                          {isTopUp ? 'Top up order' : receipt.type === 'bank' ? 'Wallet record' : 'Notification'}
                         </span>
                         <span
                           className="rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.16em]"
@@ -392,7 +392,7 @@ export default function HistoryPage() {
               <div>
                 <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">Transaction preview</p>
                 <h3 className="mt-1 text-xl font-black tracking-[-0.04em] text-slate-950">
-                  {selectedReceipt.type === 'bank' ? 'Bank Slip' : 'Flash Mail'}
+                  {selectedReceipt.type === 'bank' ? 'Wallet Record' : 'Notification'}
                 </h3>
               </div>
               <button

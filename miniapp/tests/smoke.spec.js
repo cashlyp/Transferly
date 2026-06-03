@@ -144,6 +144,52 @@ const webhookEvents = [
   }
 ];
 
+const providerHealth = [
+  {
+    provider: 'paypal',
+    display_name: 'PayPal',
+    provider_status: 'ready',
+    score: 96,
+    status: 'healthy',
+    failed_webhooks: 0,
+    recent_webhooks: 1,
+    unresolved_issues: 0,
+    reasons: [],
+    next_actions: []
+  },
+  {
+    provider: 'stripe',
+    display_name: 'Stripe',
+    provider_status: 'degraded',
+    score: 82,
+    status: 'degraded',
+    failed_webhooks: 1,
+    recent_webhooks: 2,
+    unresolved_issues: 1,
+    reasons: ['1 failed or retrying webhook event'],
+    next_actions: ['Replay or ignore failed Stripe webhooks']
+  }
+];
+
+const deadLetterJobs = [
+  {
+    job_id: 'dead_letter_stripe_1001',
+    name: 'process-approved-payout-dead-letter',
+    source_queue: 'payout-process',
+    source_job_id: 'payout_stripe_1001',
+    failed_reason: 'Provider queue exhausted retries',
+    data: {
+      sourceQueue: 'payout-process',
+      sourceJobId: 'payout_stripe_1001',
+      payload: {
+        provider: 'stripe',
+        payout_id: 'payout_stripe_1001'
+      }
+    },
+    recovery: null
+  }
+];
+
 function buildWebhookDetail(event, overrides = {}) {
   const source = event || webhookEvents[0];
   const isProcessed = source.status === 'PROCESSED';
@@ -346,6 +392,30 @@ async function mockTransferlyApi(page, options = {}) {
       return;
     }
 
+    if (path === '/api/admin/dead-letters/dead_letter_stripe_1001/recover' && route.request().method() === 'POST') {
+      await json({
+        dead_letter: {
+          ...deadLetterJobs[0],
+          recovery: {
+            recovered_at: '2026-05-11T12:10:00.000Z',
+            recovery_job_id: 'recovered_stripe_1001',
+            recovery_job_name: 'process-approved-payout'
+          }
+        },
+        recovery: {
+          recovered_at: '2026-05-11T12:10:00.000Z',
+          recovery_job_id: 'recovered_stripe_1001',
+          recovery_job_name: 'process-approved-payout'
+        }
+      });
+      return;
+    }
+
+    if (path === '/api/admin/dead-letters') {
+      await json({ data: deadLetterJobs });
+      return;
+    }
+
     if (path === '/api/admin/top-up-orders') {
       await json({ data: [] });
       return;
@@ -363,6 +433,11 @@ async function mockTransferlyApi(page, options = {}) {
         wise: { available_balance_cents: 0, currency: 'USD' }
       };
       await json({ balance: balances[provider] || balances.paypal });
+      return;
+    }
+
+    if (path === '/api/admin/payment-providers/health') {
+      await json({ data: providerHealth, generated_at: '2026-05-11T12:10:00.000Z' });
       return;
     }
 
@@ -469,7 +544,10 @@ test('mini app provider command center scopes provider operations', async ({ pag
       .filter({ hasText: 'stripe_invoice_1002' })
   ).toBeVisible();
   await expect(page.getByText('$3,210.50')).toBeVisible();
+  await expect(page.getByText('82/100').first()).toBeVisible();
   await expect(page.getByText('Webhook health', { exact: true })).toBeVisible();
+  await expect(page.getByText('Dead-letter recovery', { exact: true })).toBeVisible();
+  await expect(page.getByText('payout-process')).toBeVisible();
 
   const failedWebhook = page
     .getByRole('article')
@@ -483,6 +561,10 @@ test('mini app provider command center scopes provider operations', async ({ pag
 
   await webhookDetail.getByRole('button', { name: /Replay/i }).click();
   await expect(page.getByText('Webhook replay queued')).toBeVisible();
+
+  const deadLetterLane = page.locator('section').filter({ hasText: 'Dead-letter recovery' });
+  await deadLetterLane.getByRole('button', { name: /^Recover$/ }).click();
+  await expect(page.getByText('Dead-letter job recovered')).toBeVisible();
 });
 
 for (const width of [360, 390, 430]) {
@@ -498,7 +580,9 @@ for (const width of [360, 390, 430]) {
 
     await expect(page.getByText('Stripe webhook delivery is delayed')).toBeVisible();
     await expect(page.getByText('$3,210.50')).toBeVisible();
+    await expect(page.getByText('82/100').first()).toBeVisible();
     await expect(page.getByText('Webhook health', { exact: true })).toBeVisible();
+    await expect(page.getByText('Dead-letter recovery', { exact: true })).toBeVisible();
   });
 }
 

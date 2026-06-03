@@ -245,14 +245,14 @@ function generateSessionId() {
 
 const tabMeta = {
   bank: {
-    title: 'Custom Bank Slip',
-    subtitle: 'Build a clean transfer slip preview with your own transaction details.',
-    feeLabel: 'Bank Slip'
+    title: 'Custom Wallet Record',
+    subtitle: 'Build a clean transfer record preview with your own transaction details.',
+    feeLabel: 'Wallet Record'
   },
   email: {
-    title: 'PayPal Custom Flash Mail',
+    title: 'PayPal Custom Notification',
     subtitle: 'Create a branded email-style receipt preview for service and support flows.',
-    feeLabel: 'Flash Mail'
+    feeLabel: 'Notification'
   }
 };
 
@@ -363,7 +363,7 @@ export default function GenerateReceiptPage() {
       return `${requestedService.title} ${emailVariantLabel}`;
     }
 
-    if (tabKey === 'bank' && requestedService && requestedService.category === 'Bank Slips') {
+    if (tabKey === 'bank' && requestedService && requestedService.category === 'Verified Wallets') {
       return `${requestedService.title} Slip`;
     }
 

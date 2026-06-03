@@ -37,6 +37,8 @@ const {
   canGenerateService,
   getServiceGroupId,
   serviceSummary,
+  getServiceCommandCenter,
+  getServiceLane,
 } = require("./utils/serviceCatalog");
 const {
   addUser,
@@ -126,16 +128,16 @@ const MINI_APP_SECTIONS = Object.freeze({
   support: "support",
   profile: "profile",
   ops: "ops",
-  generate: "invoices",
-  studio: "invoices",
-  vault: "activity",
-  history: "activity",
+  generate: "studio",
+  studio: "studio",
+  vault: "vault",
+  history: "vault",
 });
 const PROVIDER_LANE_DETAILS = {
   "custom-details": {
     label: "Custom Details",
     status: "live",
-    summary: "Create provider-styled custom receipt or flash-mail details from the shared Transferly builder.",
+    summary: "Create provider-styled custom receipt or notification details from the shared Transferly builder.",
   },
   invoices: {
     label: "Invoices",
@@ -511,6 +513,8 @@ function buildStartKeyboard(ctx, access = {}) {
     .text("🪪 Whoami", buildCallbackData(ctx, "WHOAMI"))
     .text("✖️ Cancel Prompt", buildCallbackData(ctx, "CANCEL"));
   addMiniAppButton(keyboard, "🚀 Open Dashboard", "dashboard");
+  addMiniAppButton(keyboard, "🧾 Open Studio", "studio");
+  addMiniAppButton(keyboard, "💰 Open Wallet", "wallet");
   const adminUsername = (access.configuredAdminUsername || config.admin?.username || "").replace(/^@/, "");
   if (!access.isAuthorized && adminUsername) {
     keyboard.row().url("📱 Request Access", `https://t.me/${adminUsername}`);
@@ -527,8 +531,8 @@ function buildMainMenuKeyboard(ctx, access = {}) {
     .text("💳 Providers", buildCallbackData(ctx, "PROVIDERS"))
     .text("🧰 Services", buildCallbackData(ctx, "SERVICES"))
     .row()
-    .text("🏦 Bank Slips", buildCallbackData(ctx, "GROUP:BANK"))
-    .text("✉️ Flash Emails", buildCallbackData(ctx, "GROUP:FLASH"))
+    .text("🏦 Wallet Records", buildCallbackData(ctx, "GROUP:BANK"))
+    .text("✉️ Notifications", buildCallbackData(ctx, "GROUP:FLASH"))
     .row()
     .text("💳 Provider Catalog", buildCallbackData(ctx, "GROUP:PAYMENT_PROVIDERS"))
     .text("₿ Crypto", buildCallbackData(ctx, "GROUP:CRYPTO"))
@@ -578,6 +582,8 @@ function buildMainMenuKeyboard(ctx, access = {}) {
   }
 
   addMiniAppButton(keyboard, "🚀 Open Dashboard", "dashboard");
+  addMiniAppButton(keyboard, "🧾 Open Studio", "studio");
+  addMiniAppButton(keyboard, "🗂️ Open Vault", "vault");
   return keyboard;
 }
 
@@ -606,7 +612,7 @@ function buildProvidersKeyboard(ctx, access = {}) {
     .row()
     .text("🧰 Service Catalog", buildCallbackData(ctx, "SERVICES"))
     .text("🏠 Main Menu", buildCallbackData(ctx, "MENU"));
-  addMiniAppButton(keyboard, "🚀 Open Provider Dashboard", "dashboard");
+  addMiniAppButton(keyboard, "🚀 Open Provider Dashboard", "ops");
   return keyboard;
 }
 
@@ -669,6 +675,7 @@ function buildServiceGroupKeyboard(ctx, group) {
 function buildServiceDetailKeyboard(ctx, service) {
   const groupId = getServiceGroupId(service);
   const keyboard = new InlineKeyboard();
+  const commandCenter = getServiceCommandCenter(service);
 
   if (isPaymentProviderService(service)) {
     keyboard
@@ -677,8 +684,27 @@ function buildServiceDetailKeyboard(ctx, service) {
       .row()
       .text("🕒 Recent Receipts", buildCallbackData(ctx, `HISTORY:${service.slug}`))
       .text("💰 Balance", buildCallbackData(ctx, "BALANCE"));
-  } else
-  if (canGenerateService(service)) {
+  } else if (commandCenter) {
+    commandCenter.lanes.forEach((lane, index) => {
+      const marker = lane.status === "live" ? "✅" : "🛠";
+      keyboard.text(`${marker} ${lane.label}`, buildCallbackData(ctx, `SERVICE_LANE:${service.slug}:${lane.id}`));
+      if (index % 2 === 1 && index < commandCenter.lanes.length - 1) {
+        keyboard.row();
+      }
+    });
+
+    keyboard.row();
+    if (canGenerateService(service)) {
+      keyboard
+        .text("✍️ Custom Details", buildCallbackData(ctx, `CUSTOM:${service.slug}`))
+        .text("🕒 Recent Receipts", buildCallbackData(ctx, `HISTORY:${service.slug}`));
+    } else {
+      keyboard
+        .text("ℹ️ Service Info", buildCallbackData(ctx, `INFO:${service.slug}`))
+        .text("💰 Balance", buildCallbackData(ctx, "BALANCE"));
+    }
+    addMiniAppButton(keyboard, "🚀 Open Service Workspace", commandCenter.lanes[0]?.miniAppSection || "studio");
+  } else if (canGenerateService(service)) {
     const customLabel = service.slug === "paypal" ? "🧭 PayPal Workspace" : "✍️ Custom Details";
     keyboard
       .text("⚡ Quick Generate", buildCallbackData(ctx, `RUN:${service.slug}`))
@@ -699,6 +725,34 @@ function buildServiceDetailKeyboard(ctx, service) {
   return keyboard;
 }
 
+function buildServiceLaneKeyboard(ctx, service, lane) {
+  const keyboard = new InlineKeyboard();
+
+  if (lane.status === "live") {
+    keyboard.text("🚀 Start Lane", buildCallbackData(ctx, `SERVICE_ACTION:${service.slug}:${lane.id}`)).row();
+  }
+
+  if (lane.action === "run" && canGenerateService(service)) {
+    keyboard.text("⚡ Quick Generate", buildCallbackData(ctx, `RUN:${service.slug}`));
+  } else if (lane.action === "custom" && canGenerateService(service)) {
+    keyboard.text("✍️ Custom Details", buildCallbackData(ctx, `CUSTOM:${service.slug}`));
+  } else if (lane.action === "history") {
+    keyboard.text("🕒 Recent Receipts", buildCallbackData(ctx, `HISTORY:${service.slug}`));
+  } else if (lane.action === "balance") {
+    keyboard.text("💰 Balance", buildCallbackData(ctx, "BALANCE"));
+  }
+
+  if (lane.miniAppSection) {
+    addMiniAppButton(keyboard, `🚀 Open ${lane.label}`, lane.miniAppSection);
+  }
+
+  keyboard
+    .row()
+    .text(`⬅️ ${service.title}`, buildCallbackData(ctx, `SERVICE:${service.slug}`))
+    .text("🏠 Main Menu", buildCallbackData(ctx, "MENU"));
+  return keyboard;
+}
+
 function isPaymentProviderService(service) {
   return PAYMENT_PROVIDER_SLUGS.has(service?.slug);
 }
@@ -707,6 +761,105 @@ function getProviderLaneStatus(providerSlug, laneId) {
   const lane = PROVIDER_LANE_DETAILS[laneId];
   if (!lane) return "setup";
   return lane.statusByProvider?.[providerSlug] || lane.status || "setup";
+}
+
+function buildServiceCommandCenterSummaryUrl(slug) {
+  if (!slug || !config.apiUrl || !config.admin?.apiToken) return "";
+  try {
+    return new URL(`/api/services/${encodeURIComponent(slug)}/command-center`, config.apiUrl).toString();
+  } catch (_) {
+    return "";
+  }
+}
+
+function buildServiceLaneDetailUrl(slug, laneId) {
+  if (!slug || !laneId || !config.apiUrl || !config.admin?.apiToken) return "";
+  try {
+    return new URL(`/api/services/${encodeURIComponent(slug)}/lanes/${encodeURIComponent(laneId)}`, config.apiUrl).toString();
+  } catch (_) {
+    return "";
+  }
+}
+
+function buildServiceLaneActionUrl(slug, laneId) {
+  if (!slug || !laneId || !config.apiUrl || !config.admin?.apiToken) return "";
+  try {
+    return new URL(`/api/services/${encodeURIComponent(slug)}/lanes/${encodeURIComponent(laneId)}/actions`, config.apiUrl).toString();
+  } catch (_) {
+    return "";
+  }
+}
+
+async function loadServiceCommandCenterSummary(ctx, service) {
+  const url = buildServiceCommandCenterSummaryUrl(service?.slug);
+  if (!url) return null;
+  try {
+    const response = await httpClient.get(ctx, url, {
+      timeout: 5000,
+      retry: { retries: 0 },
+    });
+    return response.data || null;
+  } catch (_) {
+    return null;
+  }
+}
+
+async function loadServiceLaneDetail(ctx, service, laneId) {
+  const url = buildServiceLaneDetailUrl(service?.slug, laneId);
+  if (!url) return null;
+  try {
+    const response = await httpClient.get(ctx, url, {
+      timeout: 5000,
+      retry: { retries: 0 },
+    });
+    return response.data || null;
+  } catch (_) {
+    return null;
+  }
+}
+
+async function recordServiceLaneActionIntent(ctx, service, lane) {
+  const url = buildServiceLaneActionUrl(service?.slug, lane?.id);
+  if (!url) return null;
+
+  const response = await httpClient.post(
+    ctx,
+    url,
+    {
+      source: "telegram-bot",
+      intent: lane?.action || "launch",
+      metadata: {
+        mini_app_section: lane?.miniAppSection || "",
+      },
+    },
+    {
+      timeout: 5000,
+      retry: { retries: 0 },
+    },
+  );
+  return response.data || null;
+}
+
+function formatServiceLaneMetricLines(metrics = []) {
+  return metrics
+    .slice(0, 3)
+    .map((metric) => line(metric.label || "Metric", metric.value || "Pending"));
+}
+
+function formatServiceLaneReadinessLines(checks = []) {
+  return checks
+    .slice(0, 4)
+    .map((check) => line(check.label || "Check", check.status === "ready" ? "Ready" : "Attention"));
+}
+
+function formatServiceLaneActivityLines(activity = {}) {
+  const receipts = Array.isArray(activity.recent_receipts) ? activity.recent_receipts : [];
+  const latest = receipts[0];
+  return [
+    line("Service receipts", activity.service_receipt_count || 0),
+    line("Compatible history", activity.compatible_receipt_count || 0),
+    line("Latest", latest?.title || "No matching receipt"),
+  ];
 }
 
 function providerTitleFromKey(providerKey) {
@@ -1011,7 +1164,7 @@ function buildComposerPreviewKeyboard(ctx) {
 
 function buildPayPalWorkspaceKeyboard(ctx, access = {}) {
   const keyboard = new InlineKeyboard()
-    .text("✉️ Flash Email", buildCallbackData(ctx, "PP:EMAIL"))
+    .text("✉️ Notification", buildCallbackData(ctx, "PP:EMAIL"))
     .row()
     .text("🕒 PayPal Receipts", buildCallbackData(ctx, "HISTORY:paypal"))
     .text("💰 Balance", buildCallbackData(ctx, "BALANCE"));
@@ -1185,6 +1338,8 @@ function buildCallbackRecoveryKeyboard(ctx, action, access = {}) {
   if (
     value.startsWith("GROUP:") ||
     value.startsWith("SERVICE:") ||
+    value.startsWith("SERVICE_ACTION:") ||
+    value.startsWith("SERVICE_LANE:") ||
     value.startsWith("PROVIDER:") ||
     value.startsWith("PROVIDER_CUSTOM:") ||
     value.startsWith("PROVIDER_LANE:") ||
@@ -1736,7 +1891,7 @@ async function handlePayPalWorkspace(ctx) {
     "",
     "Choose the PayPal lane you want to operate.",
     "",
-    line("Flash Email", "Generate PayPal receipt-style email output"),
+    line("Notification", "Generate PayPal receipt-style notification output"),
     access.isAdmin ? line("Official Invoices", "Filter, page, inspect, refresh, open links, and release paid funds") : null,
     access.isAdmin ? line("Official Payouts", "Filter, page, inspect, approve, reject, refresh, or cancel unclaimed payouts") : null,
   ].filter(Boolean);
@@ -2732,7 +2887,7 @@ async function handleMenu(ctx) {
     dashboard ? "" : null,
     "<b>⚡ Main Workspaces</b>",
     "💳 Providers  •  📊 Activity",
-    "🏦 Bank Slips  •  ✉️ Flash Emails  •  ₿ Crypto",
+    "🏦 Wallet Records  •  ✉️ Notifications  •  🗂️ Vault",
     access.isAdmin ? "📄 Invoices  •  💸 Payouts  •  🛡️ Risk  •  🔐 Security" : "🧾 Service Receipts  •  💰 Balance  •  🚀 Mini App",
     "",
     access.isOwner
@@ -2799,7 +2954,9 @@ async function handleMiniApp(ctx) {
   const lines = [
     "<b>🚀 Transferly Mini App</b>",
     "",
-    "Open the Telegram-native finance workspace for dashboards, invoices, payouts, wallet, activity, and operator flows.",
+    "Open the Telegram-native workspace for receipts, points, provider operations, activity, and guided support.",
+    "",
+    "No web login or register screen is needed here. Launch from the bot and Transferly keeps the miniapp flow tied to Telegram context.",
     "",
     config.miniAppUrl
       ? "Use the buttons below to launch the Mini App directly inside Telegram."
@@ -2810,6 +2967,9 @@ async function handleMiniApp(ctx) {
     .text("📋 Menu", buildCallbackData(ctx, "MENU"))
     .text("💳 Providers", buildCallbackData(ctx, "PROVIDERS"));
   addMiniAppButton(keyboard, "🚀 Dashboard", "dashboard");
+  addMiniAppButton(keyboard, "🧾 Studio", "studio");
+  addMiniAppButton(keyboard, "🗂️ Vault", "vault");
+  addMiniAppButton(keyboard, "💳 Providers", "ops");
   addMiniAppButton(keyboard, "📄 Invoices", "invoices");
   addMiniAppButton(keyboard, "💸 Payouts", "payouts");
   addMiniAppButton(keyboard, "📊 Activity", "activity");
@@ -2843,7 +3003,7 @@ async function handleHelp(ctx) {
     "<b>🧭 Main Navigation</b>",
     "• /start — opens a clean Transferly home screen.",
     "• /menu — resets the current flow and returns to the main workspace menu.",
-    "• /miniapp — opens Telegram Mini App launch buttons.",
+    "• /miniapp — opens Telegram Mini App launch buttons for Dashboard, Studio, Vault, Wallet, Providers, and Support.",
     "• /providers — opens the payment provider cockpit.",
     "• /services — opens the service catalog.",
     "• /help — shows this full guide.",
@@ -2861,15 +3021,17 @@ async function handleHelp(ctx) {
     "• /referral — shows referral code and referral count.",
     "",
     "<b>🧾 Receipts</b>",
-    "• /services — browse Bank Slips, Flash Emails, Crypto Receipts, and Utilities.",
+    "• /services — browse Wallet Records, Verified Notifications, Receipt Vault, and Utilities.",
+    "• Mini App Studio — opens the Telegram-native receipt workspace without login/register pages.",
+    "• Mini App Vault — opens generated receipt history and support-ready receipt context.",
     "• Service button flow — choose a category, choose a service, then use Quick Generate, Custom Details, History, or Balance.",
     "• /receipts — shows latest generated receipts for the linked user.",
     "• /history paypal — opens service-specific receipt history where supported.",
     "• /receipt bank {\"service\":\"opay\",\"amount\":\"25.00\"} — direct receipt generation shortcut.",
     "",
     "<b>💳 PayPal Workspace</b>",
-    "• Services → Flash Emails → PayPal → PayPal Workspace.",
-    "• Flash Email — starts the PayPal receipt composer.",
+    "• Services → Verified Notifications → PayPal → PayPal Workspace.",
+    "• Notification — starts the PayPal receipt composer.",
     "• Official Invoices — admin invoice list with status filters, pages, detail cards, Refresh, Release, and Open PayPal Link.",
     "• Official Payouts — admin payout list with status/provider filters, pages, detail cards, Approve, Reject, Refresh, and Cancel Unclaimed.",
     "",
@@ -3005,6 +3167,7 @@ async function handleServiceDetail(ctx, slug) {
     return;
   }
 
+  const commandCenter = getServiceCommandCenter(service);
   const lines = [
     `<b>${escapeHtml(service.title)}</b>`,
     "",
@@ -3015,7 +3178,117 @@ async function handleServiceDetail(ctx, slug) {
     line("Badge", service.badge),
     line("Generator", service.receiptType || "Web workspace"),
   ];
+  if (commandCenter) {
+    lines.push(
+      "",
+      `<b>${escapeHtml(commandCenter.title)}</b>`,
+      escapeHtml(commandCenter.summary),
+      "",
+      ...commandCenter.lanes.map((lane) =>
+        `• <b>${escapeHtml(lane.label)}</b> — ${escapeHtml(lane.status === "live" ? "Live" : "Setup")} — ${escapeHtml(lane.summary)}`,
+      ),
+    );
+  }
   await replyHtml(ctx, lines.join("\n"), buildServiceDetailKeyboard(ctx, service));
+}
+
+async function handleServiceLane(ctx, slug, laneId) {
+  if (!(await requireCapability(ctx, CAPABILITIES.SERVICES_USE, "service lane"))) return;
+  const service = getService(slug);
+  const lane = getServiceLane(service, laneId);
+  if (!service || !lane) {
+    await replyHtml(ctx, "Unknown service lane. Open the service catalog again.", buildServiceGroupsKeyboard(ctx));
+    return;
+  }
+
+  rememberScreen(ctx, `SERVICE_LANE:${service.slug}:${lane.id}`);
+  clearPendingPrompts(ctx);
+  const commandCenter = getServiceCommandCenter(service);
+  const liveSummary = await loadServiceCommandCenterSummary(ctx, service);
+  const laneDetail = await loadServiceLaneDetail(ctx, service, lane.id);
+  const liveLane = liveSummary?.command_center?.lanes?.find((entry) => entry.id === lane.id);
+  const liveMetrics = Array.isArray(laneDetail?.lane?.live_metrics)
+    ? laneDetail.lane.live_metrics
+    : Array.isArray(liveLane?.live_metrics)
+      ? liveLane.live_metrics
+      : [];
+  const lines = [
+    `<b>${escapeHtml(service.title)} · ${escapeHtml(lane.label)}</b>`,
+    "",
+    line("Command Center", commandCenter?.title || "Service workspace"),
+    line("Status", lane.status === "live" ? "Live" : "Setup required"),
+    line("Mini App", lane.miniAppSection || "Service workspace"),
+    "",
+    escapeHtml(lane.summary),
+  ];
+  if (liveMetrics.length > 0) {
+    lines.push("", "<b>Live Metrics</b>", ...formatServiceLaneMetricLines(liveMetrics));
+  }
+  if (laneDetail?.action) {
+    lines.push(
+      "",
+      "<b>Action</b>",
+      line("Primary", laneDetail.action.label || "Open lane"),
+      line("Route", laneDetail.action.route || lane.miniAppSection || "Mini App"),
+    );
+  }
+  if (Array.isArray(laneDetail?.readiness) && laneDetail.readiness.length > 0) {
+    lines.push("", "<b>Readiness</b>", ...formatServiceLaneReadinessLines(laneDetail.readiness));
+  }
+  if (laneDetail?.activity) {
+    lines.push("", "<b>Activity</b>", ...formatServiceLaneActivityLines(laneDetail.activity));
+  }
+  if (laneDetail?.support_context?.suggested_handoff) {
+    lines.push("", "<b>Support Handoff</b>", escapeHtml(laneDetail.support_context.suggested_handoff));
+  }
+  lines.push(
+    "",
+    lane.status === "live"
+      ? "Use the lane action below or open the Mini App section to continue from Telegram context."
+      : "This lane is visible for planning and can be activated when backend support is connected.",
+  );
+  await replyHtml(ctx, lines.join("\n"), buildServiceLaneKeyboard(ctx, service, lane));
+}
+
+async function handleServiceLaneAction(ctx, slug, laneId) {
+  if (!(await requireCapability(ctx, CAPABILITIES.SERVICES_USE, "service lane action"))) return;
+  const service = getService(slug);
+  const lane = getServiceLane(service, laneId);
+  if (!service || !lane) {
+    await replyHtml(ctx, "Unknown service lane. Open the service catalog again.", buildServiceGroupsKeyboard(ctx));
+    return;
+  }
+
+  rememberScreen(ctx, `SERVICE_LANE:${service.slug}:${lane.id}`);
+  clearPendingPrompts(ctx);
+
+  let result = null;
+  try {
+    result = await recordServiceLaneActionIntent(ctx, service, lane);
+  } catch (error) {
+    const message =
+      error?.userMessage ||
+      error?.response?.data?.message ||
+      error?.message ||
+      "Lane action could not be recorded.";
+    await replyHtml(ctx, `⚠️ ${escapeHtml(message)}`, buildServiceLaneKeyboard(ctx, service, lane));
+    return;
+  }
+
+  const actionIntent = result?.action_intent;
+  const route = actionIntent?.action?.route || lane.miniAppSection || "Mini App";
+  const lines = [
+    `<b>${escapeHtml(service.title)} · ${escapeHtml(lane.label)}</b>`,
+    "",
+    "<b>Action Recorded</b>",
+    line("Status", actionIntent?.status || "recorded"),
+    line("Intent", actionIntent?.intent || lane.action || "launch"),
+    line("Route", route),
+    "",
+    "Open the Mini App section below to continue with the audited lane context.",
+  ];
+
+  await replyHtml(ctx, lines.join("\n"), buildServiceLaneKeyboard(ctx, service, lane));
 }
 
 async function handleServiceInfo(ctx, slug) {
@@ -3027,12 +3300,15 @@ async function handleServiceInfo(ctx, slug) {
     return;
   }
 
+  const commandCenter = getServiceCommandCenter(service);
   const lines = [
     `<b>${escapeHtml(service.title)}</b>`,
     "",
     escapeHtml(serviceSummary(service)),
     "",
-    "This service is available from the Transferly catalog. A dedicated Telegram generator can be added when the backend exposes a service-specific operation.",
+    commandCenter
+      ? `${commandCenter.title} is available from Telegram with service-specific lanes and Mini App handoffs.`
+      : "This service is available from the Transferly catalog. A dedicated Telegram generator can be added when the backend exposes a service-specific operation.",
   ];
   await replyHtml(ctx, lines.join("\n"), buildServiceDetailKeyboard(ctx, service));
 }
@@ -4752,6 +5028,14 @@ async function handleStoredNavigationAction(ctx, action) {
   if (action.startsWith("SERVICE:")) {
     return handleServiceDetail(ctx, action.slice("SERVICE:".length));
   }
+  if (action.startsWith("SERVICE_ACTION:")) {
+    const [, slug, laneId] = action.split(":");
+    return handleServiceLaneAction(ctx, slug, laneId);
+  }
+  if (action.startsWith("SERVICE_LANE:")) {
+    const [, slug, laneId] = action.split(":");
+    return handleServiceLane(ctx, slug, laneId);
+  }
   if (action.startsWith("PROVIDER:")) {
     return handleProviderWorkspace(ctx, action.slice("PROVIDER:".length));
   }
@@ -4944,6 +5228,8 @@ registerCallbackRouter(bot, {
     handleExport,
     handleServiceGroup,
     handleServiceDetail,
+    handleServiceLane,
+    handleServiceLaneAction,
     handleProviderWorkspace,
     handleProviderLane,
     handleProviderPayouts,
@@ -5073,6 +5359,7 @@ module.exports = {
   buildServiceGroupsKeyboard,
   buildServiceGroupKeyboard,
   buildServiceDetailKeyboard,
+  buildServiceLaneKeyboard,
   buildServiceSearchResultsKeyboard,
   buildProviderWorkspaceKeyboard,
   buildPayPalWorkspaceKeyboard,

@@ -30,6 +30,7 @@ import {
   getAdminWebhookEvent as getAdminWebhookEventRequest,
   getPaymentProviderBalance as getPaymentProviderBalanceRequest,
   getMe,
+  listDeadLetterJobs as listDeadLetterJobsRequest,
   listInvoiceReminderConfigurations as listInvoiceReminderConfigurationsRequest,
   listAdminWebhookEvents as listAdminWebhookEventsRequest,
   listAdminInvoices as listAdminInvoicesRequest,
@@ -37,9 +38,11 @@ import {
   listAdminPayouts as listAdminPayoutsRequest,
   listAdminTopUpOrders as listAdminTopUpOrdersRequest,
   listPaymentOpsIssues as listPaymentOpsIssuesRequest,
+  listPaymentProviderHealth as listPaymentProviderHealthRequest,
   listPaymentProviders as listPaymentProvidersRequest,
   markAdminInvoiceReviewRequired as markAdminInvoiceReviewRequiredRequest,
   ignoreAdminWebhookEvent as ignoreAdminWebhookEventRequest,
+  recoverDeadLetterJob as recoverDeadLetterJobRequest,
   reopenPaymentOpsIssue as reopenPaymentOpsIssueRequest,
   replayAdminWebhookEvent as replayAdminWebhookEventRequest,
   resolvePaymentOpsIssue as resolvePaymentOpsIssueRequest,
@@ -306,8 +309,10 @@ export function AppContextProvider({ children }) {
   const [topUpOrders, setTopUpOrdersState] = useState([]);
   const [adminTopUpOrders, setAdminTopUpOrdersState] = useState([]);
   const [paymentProviders, setPaymentProvidersState] = useState([]);
+  const [providerHealth, setProviderHealthState] = useState([]);
   const [providerBalances, setProviderBalancesState] = useState({});
   const [webhookEvents, setWebhookEventsState] = useState([]);
+  const [deadLetterJobs, setDeadLetterJobsState] = useState([]);
 
   const applyBootstrap = useCallback((payload) => {
     if (!payload) {
@@ -353,8 +358,10 @@ export function AppContextProvider({ children }) {
       setTopUpOrdersState([]);
       setAdminTopUpOrdersState([]);
       setPaymentProvidersState([]);
+      setProviderHealthState([]);
       setProviderBalancesState({});
       setWebhookEventsState([]);
+      setDeadLetterJobsState([]);
       return null;
     }
 
@@ -487,6 +494,19 @@ export function AppContextProvider({ children }) {
     }
   }, []);
 
+  const fetchProviderHealth = useCallback(async () => {
+    try {
+      const payload = await listPaymentProviderHealthRequest();
+      const report = Array.isArray(payload?.data) ? payload.data : [];
+      setProviderHealthState(report);
+      return report;
+    } catch (error) {
+      console.error('Failed to fetch payment provider health', error);
+      setProviderHealthState([]);
+      return [];
+    }
+  }, []);
+
   const fetchProviderBalances = useCallback(async (providers = []) => {
     const providerKeys = [...new Set(providers.map(readProviderKey).filter(Boolean))];
 
@@ -525,6 +545,47 @@ export function AppContextProvider({ children }) {
       console.error('Failed to fetch webhook events', error);
       setWebhookEventsState([]);
       return [];
+    }
+  }, []);
+
+  const fetchDeadLetterJobs = useCallback(async (filters = {}) => {
+    try {
+      const payload = await listDeadLetterJobsRequest(filters);
+      const jobs = Array.isArray(payload?.data) ? payload.data : [];
+      setDeadLetterJobsState(jobs);
+      return jobs;
+    } catch (error) {
+      console.error('Failed to fetch dead-letter jobs', error);
+      setDeadLetterJobsState([]);
+      return [];
+    }
+  }, []);
+
+  const recoverDeadLetterJob = useCallback(async (jobId, note) => {
+    try {
+      const payload = await recoverDeadLetterJobRequest(jobId, note);
+      const recoveredJob = payload?.dead_letter || null;
+      const recovery = payload?.recovery || recoveredJob?.recovery || null;
+
+      setDeadLetterJobsState((previous) =>
+        previous.map((job) => {
+          const currentId = String(job?.job_id || job?.jobId || job?.id || '');
+          if (currentId !== String(jobId)) {
+            return job;
+          }
+
+          return {
+            ...job,
+            ...recoveredJob,
+            recovery,
+            recovered_at: recovery?.recovered_at || job.recovered_at
+          };
+        })
+      );
+
+      return { success: true, deadLetter: recoveredJob, recovery };
+    } catch (error) {
+      return { success: false, message: error.message };
     }
   }, []);
 
@@ -764,8 +825,10 @@ export function AppContextProvider({ children }) {
     setTopUpOrdersState([]);
     setAdminTopUpOrdersState([]);
     setPaymentProvidersState([]);
+    setProviderHealthState([]);
     setProviderBalancesState({});
     setWebhookEventsState([]);
+    setDeadLetterJobsState([]);
   }, []);
 
   const addReceipt = useCallback(async (receiptData) => {
@@ -961,8 +1024,10 @@ export function AppContextProvider({ children }) {
       setTopUpOrdersState([]);
       setAdminTopUpOrdersState([]);
       setPaymentProvidersState([]);
+      setProviderHealthState([]);
       setProviderBalancesState({});
       setWebhookEventsState([]);
+      setDeadLetterJobsState([]);
       return { success: true };
     } catch (error) {
       return { success: false, message: error.message };
@@ -1375,17 +1440,22 @@ export function AppContextProvider({ children }) {
     topUpOrders,
     adminTopUpOrders,
     paymentProviders,
+    providerHealth,
     providerBalances,
     webhookEvents,
+    deadLetterJobs,
     fetchInvoices,
     fetchInvoiceReminderConfigurations,
     fetchInvoiceTemplates,
     fetchPaymentProviders,
+    fetchProviderHealth,
     fetchProviderBalances,
     fetchWebhookEvents,
+    fetchDeadLetterJobs,
     fetchWebhookEvent,
     ignoreWebhookEvent,
     replayWebhookEvent,
+    recoverDeadLetterJob,
     fetchPaymentIssues,
     acknowledgePaymentIssue,
     resolvePaymentIssue,

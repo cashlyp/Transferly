@@ -21,6 +21,7 @@ import {
   MessageCircle,
   Plus,
   RefreshCw,
+  RotateCcw,
   Search,
   ShieldAlert,
   ShieldCheck,
@@ -461,6 +462,26 @@ function readProviderStatus(provider, openIssues, failedWebhooks) {
   return provider?.status || provider?.readiness || provider?.state || 'ready';
 }
 
+function readProviderHealthKey(health) {
+  return String(health?.provider || health?.key || health?.slug || '').toLowerCase();
+}
+
+function readProviderHealthScore(health) {
+  const score = Number(health?.score);
+  return Number.isFinite(score) ? Math.max(0, Math.min(100, score)) : 0;
+}
+
+function healthTone(score, status) {
+  const normalized = String(status || '').toLowerCase();
+  if (normalized === 'critical' || score < 50) {
+    return 'danger';
+  }
+  if (normalized === 'degraded' || normalized === 'watch' || score < 80) {
+    return 'warn';
+  }
+  return 'success';
+}
+
 function readIssueProvider(issue) {
   return readProviderSlug(issue) || String(issue?.metadata?.provider || '').toLowerCase();
 }
@@ -557,6 +578,54 @@ function readBalanceAmount(balance) {
 function readBalanceCurrency(balance) {
   const source = balance?.balance || balance || {};
   return source.currency || source.currency_code || source.currencyCode || source.summary?.currency || 'USD';
+}
+
+function readDeadLetterId(job) {
+  return String(job?.job_id || job?.jobId || job?.id || '');
+}
+
+function readDeadLetterSource(job) {
+  return job?.source_queue || job?.sourceQueue || job?.data?.sourceQueue || job?.data?.source_queue || job?.queue_name || job?.queueName || 'dead-letter';
+}
+
+function readDeadLetterSourceId(job) {
+  return job?.source_job_id || job?.sourceJobId || job?.data?.sourceJobId || job?.data?.source_job_id || '';
+}
+
+function readDeadLetterProvider(job) {
+  const payload = job?.data?.payload || job?.payload || {};
+  const candidates = [
+    job?.provider,
+    job?.data?.provider,
+    payload.provider,
+    payload.metadata?.provider,
+    payload.invoice?.provider,
+    payload.invoice?.metadata?.provider,
+    payload.payout?.provider,
+    payload.payout?.metadata?.provider,
+    payload.webhookEvent?.provider,
+    payload.webhook_event?.provider
+  ];
+  const direct = candidates.find(Boolean);
+  if (direct) {
+    return String(direct).toLowerCase();
+  }
+
+  const payloadText = JSON.stringify(payload).toLowerCase();
+  return providerOrder.find((provider) => payloadText.includes(provider)) || '';
+}
+
+function readDeadLetterTitle(job) {
+  return job?.name || `${readDeadLetterSource(job)} job`;
+}
+
+function readDeadLetterError(job) {
+  const error = job?.failed_reason || job?.failedReason || job?.data?.error?.message || job?.data?.error || job?.error;
+  return typeof error === 'string' ? error : error ? JSON.stringify(error) : 'Recovery candidate';
+}
+
+function isDeadLetterRecovered(job) {
+  return Boolean(job?.recovery || job?.recovered_at || job?.recoveredAt);
 }
 
 function readIssueSummary(issue) {
@@ -1134,17 +1203,22 @@ export function ProviderCommandCenter() {
     payouts,
     paymentIssues,
     paymentProviders,
+    providerHealth,
     providerBalances,
     webhookEvents,
+    deadLetterJobs,
     fetchInvoices,
     fetchPayouts,
     fetchPaymentIssues,
     fetchPaymentProviders,
+    fetchProviderHealth,
     fetchProviderBalances,
     fetchWebhookEvents,
+    fetchDeadLetterJobs,
     fetchWebhookEvent,
     replayWebhookEvent,
-    ignoreWebhookEvent
+    ignoreWebhookEvent,
+    recoverDeadLetterJob
   } = useAppContext();
   const telegram = useTelegramMiniApp();
   const [activeProvider, setActiveProvider] = useState('paypal');
@@ -1152,6 +1226,8 @@ export function ProviderCommandCenter() {
   const [selectedWebhook, setSelectedWebhook] = useState(null);
   const [webhookActionId, setWebhookActionId] = useState('');
   const [webhookActionError, setWebhookActionError] = useState('');
+  const [deadLetterActionId, setDeadLetterActionId] = useState('');
+  const [deadLetterActionError, setDeadLetterActionError] = useState('');
 
   useEffect(() => {
     if (!profile?.is_admin) {
@@ -1168,7 +1244,9 @@ export function ProviderCommandCenter() {
           fetchInvoices({ limit: 100 }),
           fetchPayouts({ limit: 100 }),
           fetchPaymentIssues({ limit: 100 }),
-          fetchWebhookEvents({ limit: 100 })
+          fetchWebhookEvents({ limit: 100 }),
+          fetchProviderHealth(),
+          fetchDeadLetterJobs({ limit: 50 })
         ]);
 
         await fetchProviderBalances(
@@ -1192,8 +1270,10 @@ export function ProviderCommandCenter() {
     fetchInvoices,
     fetchPaymentIssues,
     fetchPaymentProviders,
+    fetchProviderHealth,
     fetchPayouts,
     fetchProviderBalances,
+    fetchDeadLetterJobs,
     fetchWebhookEvents,
     profile?.is_admin
   ]);
@@ -1220,14 +1300,27 @@ export function ProviderCommandCenter() {
         provider
       });
     });
+    const providerHealthByKey = new Map(
+      providerHealth
+        .map((health) => [readProviderHealthKey(health), health])
+        .filter(([key]) => Boolean(key))
+    );
 
     return [...rows.values()].map((row) => {
       const providerInvoices = invoices.filter((invoice) => readProviderSlug(invoice) === row.key);
       const providerPayouts = payouts.filter((payout) => readProviderSlug(payout) === row.key);
       const providerIssues = paymentIssues.filter((issue) => readIssueProvider(issue) === row.key);
       const providerWebhooks = webhookEvents.filter((event) => readWebhookProvider(event) === row.key);
-      const openIssues = providerIssues.filter(isIssueOpen).length;
-      const failedWebhooks = providerWebhooks.filter(isWebhookFailed).length;
+      const providerDeadLetters = deadLetterJobs.filter((job) => {
+        const jobProvider = readDeadLetterProvider(job);
+        return !jobProvider || jobProvider === row.key;
+      });
+      const health = providerHealthByKey.get(row.key) || null;
+      const healthOpenIssues = Number(health?.unresolved_issues);
+      const healthFailedWebhooks = Number(health?.failed_webhooks);
+      const openIssues = Number.isFinite(healthOpenIssues) ? healthOpenIssues : providerIssues.filter(isIssueOpen).length;
+      const failedWebhooks = Number.isFinite(healthFailedWebhooks) ? healthFailedWebhooks : providerWebhooks.filter(isWebhookFailed).length;
+      const healthScore = readProviderHealthScore(health);
 
       return {
         ...row,
@@ -1235,13 +1328,17 @@ export function ProviderCommandCenter() {
         payouts: providerPayouts,
         issues: providerIssues,
         webhooks: providerWebhooks,
+        deadLetters: providerDeadLetters,
+        health,
+        healthScore,
+        healthStatus: health?.status || '',
         openIssues,
         failedWebhooks,
         status: readProviderStatus(row.provider, openIssues, failedWebhooks),
         balance: providerBalances[row.key]
       };
     });
-  }, [invoices, paymentIssues, paymentProviders, payouts, providerBalances, webhookEvents]);
+  }, [deadLetterJobs, invoices, paymentIssues, paymentProviders, payouts, providerBalances, providerHealth, webhookEvents]);
 
   useEffect(() => {
     if (!providerRows.some((provider) => provider.key === activeProvider)) {
@@ -1253,6 +1350,8 @@ export function ProviderCommandCenter() {
     setSelectedWebhook(null);
     setWebhookActionError('');
     setWebhookActionId('');
+    setDeadLetterActionError('');
+    setDeadLetterActionId('');
   }, [activeProvider]);
 
   if (!profile?.is_admin) {
@@ -1270,9 +1369,9 @@ export function ProviderCommandCenter() {
   const activeBalance = readBalanceAmount(activeRow?.balance);
   const activeCurrency = readBalanceCurrency(activeRow?.balance);
   const readinessTone = activeRow?.status === 'ready' ? 'success' : activeRow?.status === 'planned' ? 'warn' : activeRow?.failedWebhooks ? 'danger' : 'warn';
+  const activeHealthTone = healthTone(activeRow?.healthScore || 0, activeRow?.healthStatus);
   const totalIssues = providerRows.reduce((sum, provider) => sum + provider.openIssues, 0);
-  const totalWebhookFailures = providerRows.reduce((sum, provider) => sum + provider.failedWebhooks, 0);
-  const readyProviders = providerRows.filter((provider) => provider.status === 'ready').length;
+  const totalDeadLetters = deadLetterJobs.filter((job) => !isDeadLetterRecovered(job)).length;
   const capabilities = Array.isArray(activeRow?.provider?.capabilities)
     ? activeRow.provider.capabilities
     : Array.isArray(activeRow?.provider?.features)
@@ -1288,7 +1387,9 @@ export function ProviderCommandCenter() {
         fetchInvoices({ limit: 100 }),
         fetchPayouts({ limit: 100 }),
         fetchPaymentIssues({ limit: 100 }),
-        fetchWebhookEvents({ limit: 100 })
+        fetchWebhookEvents({ limit: 100 }),
+        fetchProviderHealth(),
+        fetchDeadLetterJobs({ limit: 50 })
       ]);
       await fetchProviderBalances(providers.length ? providers : providerRows.map((provider) => ({ key: provider.key })));
       toast.success('Provider command center refreshed');
@@ -1298,6 +1399,40 @@ export function ProviderCommandCenter() {
       telegram.notify('error');
     } finally {
       setRefreshing(false);
+    }
+  };
+
+  const recoverDeadLetter = async (job) => {
+    const jobId = readDeadLetterId(job);
+    if (!jobId) {
+      return;
+    }
+
+    setDeadLetterActionError('');
+    setDeadLetterActionId(jobId);
+    telegram.impact('medium');
+
+    try {
+      const result = await recoverDeadLetterJob(jobId, `Recovered from ${activeRow?.label || 'provider'} command center`);
+      if (result.success) {
+        await Promise.all([
+          fetchDeadLetterJobs({ limit: 50 }),
+          fetchProviderHealth(),
+          fetchPaymentIssues({ limit: 100 }),
+          fetchWebhookEvents({ limit: 100 })
+        ]);
+        toast.success('Dead-letter job recovered');
+        telegram.notify('success');
+        return;
+      }
+
+      throw new Error(result.message || 'Unable to recover dead-letter job');
+    } catch (error) {
+      setDeadLetterActionError(error.message);
+      toast.error(error.message);
+      telegram.notify('error');
+    } finally {
+      setDeadLetterActionId('');
     }
   };
 
@@ -1399,9 +1534,9 @@ export function ProviderCommandCenter() {
       />
 
       <div className="grid gap-3 sm:grid-cols-4">
-        <MetricCard icon={BadgeCheck} label="Ready" value={`${readyProviders}/${providerRows.length}`} detail="Providers passing readiness" tone={readyProviders === providerRows.length ? 'success' : 'default'} />
+        <MetricCard icon={Gauge} label="Health" value={`${activeRow?.healthScore || 0}/100`} detail={`${activeRow?.label || 'Provider'} score`} tone={activeHealthTone} />
         <MetricCard icon={AlertTriangle} label="Issues" value={totalIssues.toLocaleString()} detail="Open provider issues" tone={totalIssues ? 'danger' : 'success'} />
-        <MetricCard icon={Activity} label="Webhooks" value={totalWebhookFailures.toLocaleString()} detail="Failed or retrying events" tone={totalWebhookFailures ? 'danger' : 'success'} />
+        <MetricCard icon={ShieldAlert} label="Dead letters" value={totalDeadLetters.toLocaleString()} detail="Awaiting recovery" tone={totalDeadLetters ? 'danger' : 'success'} />
         <MetricCard icon={WalletCards} label="Balance" value={formatMoney(activeBalance, activeCurrency)} detail={`${activeRow?.label || 'Provider'} available`} />
       </div>
 
@@ -1424,13 +1559,19 @@ export function ProviderCommandCenter() {
             >
               <span className="block text-sm font-black">{provider.label}</span>
               <span className="mt-2 block text-[10px] font-black uppercase tracking-[0.12em] opacity-75">
-                {normalizeStatus(provider.status)}
+                {provider.health ? `${provider.healthScore}/100` : normalizeStatus(provider.status)}
               </span>
               <span className="mt-3 flex items-center gap-2 text-xs font-black">
                 <FileText size={14} />
                 {provider.invoices.length}
                 <WalletCards size={14} />
                 {provider.payouts.length}
+                {provider.deadLetters.some((job) => !isDeadLetterRecovered(job)) ? (
+                  <>
+                    <ShieldAlert size={14} />
+                    {provider.deadLetters.filter((job) => !isDeadLetterRecovered(job)).length}
+                  </>
+                ) : null}
               </span>
             </button>
           ))}
@@ -1449,7 +1590,8 @@ export function ProviderCommandCenter() {
               {normalizeStatus(activeRow?.status)}
             </span>
           </div>
-          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          <div className="mt-5 grid gap-3 sm:grid-cols-4">
+            <MetricCard icon={Gauge} label="Health" value={`${activeRow?.healthScore || 0}/100`} tone={activeHealthTone} />
             <MetricCard icon={FileText} label="Invoices" value={(activeRow?.invoices.length || 0).toLocaleString()} />
             <MetricCard icon={WalletCards} label="Payouts" value={(activeRow?.payouts.length || 0).toLocaleString()} />
             <MetricCard icon={ShieldAlert} label="Issues" value={(activeRow?.openIssues || 0).toLocaleString()} tone={activeRow?.openIssues ? 'danger' : 'success'} />
@@ -1461,6 +1603,30 @@ export function ProviderCommandCenter() {
               </span>
             ))}
           </div>
+          {activeRow?.health?.reasons?.length || activeRow?.health?.next_actions?.length ? (
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              {activeRow?.health?.reasons?.length ? (
+                <div className="rounded-[22px] bg-[var(--tg-secondary-bg-color)] p-4">
+                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[var(--tg-hint-color)]">Health reasons</p>
+                  <div className="mt-3 space-y-2">
+                    {activeRow.health.reasons.slice(0, 4).map((reason) => (
+                      <p key={reason} className="break-words text-sm font-bold text-[var(--tg-text-color)]">{reason}</p>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+              {activeRow?.health?.next_actions?.length ? (
+                <div className="rounded-[22px] bg-[var(--tg-secondary-bg-color)] p-4">
+                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[var(--tg-hint-color)]">Next actions</p>
+                  <div className="mt-3 space-y-2">
+                    {activeRow.health.next_actions.slice(0, 4).map((action) => (
+                      <p key={action} className="break-words text-sm font-bold text-[var(--tg-text-color)]">{action}</p>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
         </section>
 
         <section className="rounded-[30px] bg-[var(--tg-section-bg-color)] p-5 shadow-sm">
@@ -1604,6 +1770,60 @@ export function ProviderCommandCenter() {
           </div>
         </section>
       </div>
+
+      <section className="rounded-[30px] bg-[var(--tg-section-bg-color)] p-5 shadow-sm">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--tg-hint-color)]">Dead-letter recovery</p>
+            <h3 className="mt-2 text-2xl font-black tracking-[-0.04em] text-[var(--tg-text-color)]">{activeRow?.label} recovery lane</h3>
+          </div>
+          <StatusBadge status={(activeRow?.deadLetters || []).some((job) => !isDeadLetterRecovered(job)) ? 'failed' : 'ready'} />
+        </div>
+        <div className="mt-5 space-y-3">
+          {(activeRow?.deadLetters || []).slice(0, 5).map((job) => {
+            const jobId = readDeadLetterId(job);
+            const recovered = isDeadLetterRecovered(job);
+            const busy = deadLetterActionId === jobId;
+
+            return (
+              <article key={jobId || `${readDeadLetterSource(job)}-${readDeadLetterTitle(job)}`} className="rounded-[22px] bg-[var(--tg-secondary-bg-color)] p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="break-words text-sm font-black text-[var(--tg-text-color)]">{readDeadLetterTitle(job)}</p>
+                    <p className="mt-1 break-words text-xs font-bold text-[var(--tg-hint-color)]">
+                      {readDeadLetterSource(job)}
+                      {readDeadLetterSourceId(job) ? ` / ${readDeadLetterSourceId(job)}` : ''}
+                    </p>
+                  </div>
+                  <StatusBadge status={recovered ? 'ready' : 'failed'} />
+                </div>
+                <p className="mt-3 break-words rounded-[16px] bg-[var(--tg-section-bg-color)] px-3 py-2 text-xs font-bold text-[var(--tg-subtitle-text-color)]">
+                  {recovered ? 'Recovery has already been queued for this job.' : readDeadLetterError(job)}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => recoverDeadLetter(job)}
+                    disabled={busy || recovered || !jobId}
+                    className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-2 text-xs font-black text-emerald-700 transition active:scale-[0.98] disabled:opacity-60"
+                  >
+                    <RotateCcw size={14} />
+                    {busy ? 'Recovering' : recovered ? 'Recovered' : 'Recover'}
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+          {!activeRow?.deadLetters.length ? (
+            <p className="rounded-[22px] bg-[var(--tg-secondary-bg-color)] p-4 text-sm font-bold text-[var(--tg-subtitle-text-color)]">
+              No dead-letter jobs are currently attached to this provider.
+            </p>
+          ) : null}
+          {deadLetterActionError ? (
+            <p className="break-words rounded-[18px] bg-amber-50 p-3 text-sm font-bold text-amber-700">{deadLetterActionError}</p>
+          ) : null}
+        </div>
+      </section>
 
       <section className="rounded-[30px] bg-[var(--tg-section-bg-color)] p-5 shadow-sm">
         <div className="flex items-start justify-between gap-3">

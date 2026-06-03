@@ -1,6 +1,26 @@
 import React, { useEffect, useState } from 'react';
-import { Activity, ArrowLeft, ArrowRight, Clock3, ExternalLink, FileText, Layers3, Send, Sparkles, Wallet } from 'lucide-react';
-import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom';
+import {
+  Activity,
+  Archive,
+  ArrowLeft,
+  ArrowRight,
+  Bell,
+  BookOpen,
+  Bot,
+  Clock3,
+  Database,
+  ExternalLink,
+  FileText,
+  Layers3,
+  Link2,
+  QrCode,
+  Send,
+  ShieldCheck,
+  SlidersHorizontal,
+  Sparkles,
+  Wallet
+} from 'lucide-react';
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import AdminPaymentsTab from '../components/AdminTabs/PaymentsTab';
 import DashboardLayout from '../components/DashboardLayout';
 import { useAppContext } from '../context/AppContext';
@@ -17,9 +37,16 @@ import {
   normalizePaymentProviderView
 } from '../lib/paymentProviderLaunchers';
 import {
+  getServiceCommandCenter,
+  normalizeServiceCommandCenterView
+} from '../lib/serviceCommandCenters';
+import {
   createStripeConnectedAccount,
   createStripeConnectedAccountOnboardingLink,
+  createServiceLaneActionIntent,
   getPaymentProviderBalance,
+  getServiceCommandCenterSummary,
+  getServiceLaneDetail,
   listStripeConnectedAccounts,
   listPaymentProviderInvoiceFeatures,
   listPaymentProviders,
@@ -32,6 +59,55 @@ const laneIconMap = {
   payouts: Send,
   'wallet-balance': Wallet,
   'provider-activity': Activity
+};
+
+const serviceLaneIconMap = {
+  'activity-audit': Activity,
+  'activity-lessons': BookOpen,
+  'activity-review': Activity,
+  'activity-trail': Activity,
+  'balance-overview': Wallet,
+  'balance-readiness': Wallet,
+  'custom-notification': Bell,
+  'deposit-notification': Send,
+  'draft-reply': Bot,
+  'duplicate-receipt': Archive,
+  'escalation-states': SlidersHorizontal,
+  'invoice-handoff': FileText,
+  'link-support': Link2,
+  'operator-training': BookOpen,
+  'payment-links': Link2,
+  'payout-activity': Send,
+  'payout-operations': Send,
+  'provider-links': Link2,
+  'provider-onboarding': Layers3,
+  'provider-ops': Layers3,
+  'provider-readiness': ShieldCheck,
+  'provider-runbooks': BookOpen,
+  'qr-activity': QrCode,
+  'qr-studio': QrCode,
+  'receipt-context': Archive,
+  'receipt-vault': Archive,
+  'sandbox-payload': Database,
+  'saved-replies': BookOpen,
+  'security-center': ShieldCheck,
+  'security-context': ShieldCheck,
+  'security-notes': ShieldCheck,
+  'studio-link': Link2,
+  'studio-preview': Sparkles,
+  'support-context': Bot,
+  'support-desk': Bot,
+  'support-handoff': Bot,
+  'support-playbooks': BookOpen,
+  'support-safety': ShieldCheck,
+  'support-triage': Bot,
+  'template-library': BookOpen,
+  'template-marketplace': BookOpen,
+  'vault-reference': Archive,
+  'vault-review': Archive,
+  'vault-search': Archive,
+  'wallet-activity': Activity,
+  'wallet-record': Wallet
 };
 
 function getLaneStatusCopy(lane) {
@@ -544,16 +620,579 @@ function shouldDisableLaneForReadiness(lane, providerStatus, isAdmin) {
   return false;
 }
 
+function getLiveMetricToneClasses(tone) {
+  if (tone === 'live') {
+    return 'border-emerald-200 bg-emerald-50 text-emerald-700';
+  }
+
+  if (tone === 'warning') {
+    return 'border-amber-200 bg-amber-50 text-amber-700';
+  }
+
+  return 'border-slate-200 bg-slate-50 text-slate-600';
+}
+
+function mergeServiceCommandCenterSummary(commandCenter, summary) {
+  const liveCommandCenter = summary?.command_center;
+  if (!commandCenter || !liveCommandCenter) {
+    return commandCenter;
+  }
+
+  const liveLaneById = new Map(
+    (liveCommandCenter.lanes || []).map((lane) => [lane.id, lane])
+  );
+
+  return {
+    ...commandCenter,
+    liveMetrics: liveCommandCenter.live_metrics || [],
+    lanes: commandCenter.lanes.map((lane) => {
+      const liveLane = liveLaneById.get(lane.id);
+      return {
+        ...lane,
+        status: liveLane?.status || lane.status,
+        liveMetrics: liveLane?.live_metrics || []
+      };
+    })
+  };
+}
+
+function LiveMetricGrid({ metrics }) {
+  if (!metrics?.length) {
+    return null;
+  }
+
+  return (
+    <div className="grid gap-3 md:grid-cols-3">
+      {metrics.map((metric) => (
+        <div key={metric.id} className={`rounded-[18px] border px-4 py-3 ${getLiveMetricToneClasses(metric.tone)}`}>
+          <p className="text-[10px] font-black uppercase tracking-[0.14em] opacity-70">{metric.label}</p>
+          <p className="mt-2 text-lg font-black tracking-[-0.03em]">{metric.value}</p>
+          {metric.description ? (
+            <p className="mt-2 text-xs font-bold leading-5 opacity-80">{metric.description}</p>
+          ) : null}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function getLaneReadinessClasses(status) {
+  if (status === 'ready') {
+    return 'border-emerald-200 bg-emerald-50 text-emerald-700';
+  }
+
+  return 'border-amber-200 bg-amber-50 text-amber-700';
+}
+
+function ServiceLaneActionKit({ laneDetail, loading, error, accent }) {
+  const navigate = useNavigate();
+  const [actionState, setActionState] = useState({ loading: false, error: '' });
+
+  if (!loading && !error && !laneDetail) {
+    return null;
+  }
+
+  const readiness = Array.isArray(laneDetail?.readiness) ? laneDetail.readiness : [];
+  const prefill = laneDetail?.prefill;
+  const recentReceipts = Array.isArray(laneDetail?.activity?.recent_receipts)
+    ? laneDetail.activity.recent_receipts
+    : [];
+  const supportContext = laneDetail?.support_context;
+
+  const handleLaunchAction = async () => {
+    if (!laneDetail?.service?.slug || !laneDetail?.lane?.id || !laneDetail?.action?.route) {
+      return;
+    }
+
+    setActionState({ loading: true, error: '' });
+
+    try {
+      const result = await createServiceLaneActionIntent(laneDetail.service.slug, laneDetail.lane.id, {
+        source: 'miniapp',
+        intent: laneDetail.action.kind || 'launch',
+        metadata: { route: laneDetail.action.route }
+      });
+      navigate(result?.action_intent?.action?.route || laneDetail.action.route);
+    } catch (launchError) {
+      setActionState({
+        loading: false,
+        error: launchError?.message || 'Action could not be recorded.'
+      });
+    }
+  };
+
+  return (
+    <div className="mt-6 rounded-[24px] border border-slate-200 bg-slate-50 px-5 py-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Action Kit</p>
+          <h3 className="mt-2 text-xl font-black tracking-[-0.04em] text-slate-950">
+            {laneDetail?.lane?.title || 'Lane workspace'}
+          </h3>
+        </div>
+        {loading ? (
+          <div className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">
+            Loading
+          </div>
+        ) : null}
+      </div>
+
+      {error ? (
+        <p className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-800">
+          {error}
+        </p>
+      ) : null}
+
+      {laneDetail ? (
+        <>
+          {laneDetail.action ? (
+            <div className="mt-4 flex flex-col gap-3 rounded-[20px] border border-white bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">Primary Action</p>
+                <p className="mt-2 text-sm font-black text-slate-950">{laneDetail.action.label}</p>
+              </div>
+              {laneDetail.action.route ? (
+                <button
+                  type="button"
+                  onClick={handleLaunchAction}
+                  disabled={actionState.loading}
+                  className="inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-black text-white transition hover:opacity-90 disabled:cursor-wait disabled:opacity-70"
+                  style={{ backgroundColor: accent.bg, color: accent.fg }}
+                >
+                  {actionState.loading ? 'Recording' : 'Launch'}
+                  <ArrowRight size={15} />
+                </button>
+              ) : null}
+            </div>
+          ) : null}
+
+          {actionState.error ? (
+            <p className="mt-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">
+              {actionState.error}
+            </p>
+          ) : null}
+
+          {readiness.length ? (
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              {readiness.map((check) => (
+                <div key={check.id} className={`rounded-[18px] border px-4 py-3 ${getLaneReadinessClasses(check.status)}`}>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-black">{check.label}</p>
+                    <span className="text-[10px] font-black uppercase tracking-[0.14em] opacity-80">
+                      {check.status === 'ready' ? 'Ready' : 'Attention'}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-xs font-bold leading-5 opacity-80">{check.description}</p>
+                </div>
+              ))}
+            </div>
+          ) : null}
+
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+            <div className="rounded-[20px] border border-white bg-white px-4 py-4">
+              <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">Launch Prefill</p>
+              {prefill ? (
+                <>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                    <div className="rounded-[16px] border border-slate-200 bg-slate-50 px-3 py-2">
+                      <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Type</p>
+                      <p className="mt-1 text-sm font-black text-slate-950">{prefill.receipt_type}</p>
+                    </div>
+                    <div className="rounded-[16px] border border-slate-200 bg-slate-50 px-3 py-2">
+                      <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Service</p>
+                      <p className="mt-1 text-sm font-black text-slate-950">{prefill.service_title}</p>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {(prefill.suggested_fields || []).map((field) => (
+                      <span key={field} className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-black text-slate-600">
+                        {field}
+                      </span>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <p className="mt-3 text-sm font-bold leading-6 text-slate-600">This lane opens a workspace section without generator prefill.</p>
+              )}
+            </div>
+
+            <div className="rounded-[20px] border border-white bg-white px-4 py-4">
+              <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">Support Context</p>
+              <p className="mt-3 text-sm font-bold leading-6 text-slate-600">
+                {supportContext?.suggested_handoff || 'No support handoff is available yet.'}
+              </p>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                <div className="rounded-[16px] border border-slate-200 bg-slate-50 px-3 py-2">
+                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Points</p>
+                  <p className="mt-1 text-sm font-black text-slate-950">{supportContext?.points_available || 0}</p>
+                </div>
+                <div className="rounded-[16px] border border-slate-200 bg-slate-50 px-3 py-2">
+                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Wallet</p>
+                  <p className="mt-1 text-sm font-black text-slate-950">{supportContext?.wallet?.available_balance || 'Not linked'}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 rounded-[20px] border border-white bg-white px-4 py-4">
+            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">Recent Receipts</p>
+            {recentReceipts.length ? (
+              <div className="mt-3 grid gap-2">
+                {recentReceipts.slice(0, 3).map((receipt) => (
+                  <div key={receipt.id} className="flex flex-col gap-1 rounded-[16px] border border-slate-200 bg-slate-50 px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm font-black text-slate-950">{receipt.title}</p>
+                      <p className="text-xs font-bold text-slate-500">{receipt.summary?.text || receipt.type}</p>
+                    </div>
+                    <span className="text-xs font-black uppercase tracking-[0.12em] text-slate-400">{receipt.status}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-3 text-sm font-bold text-slate-600">No matching receipts yet.</p>
+            )}
+          </div>
+        </>
+      ) : null}
+    </div>
+  );
+}
+
+function ServiceCommandCenterPage({
+  service,
+  commandCenter,
+  activeLane,
+  points,
+  estimatedCost,
+  recommendedPacks,
+  needsTopUp,
+  relatedServices,
+  commandCenterSummaryLoading,
+  commandCenterSummaryError,
+  laneDetailState
+}) {
+  const accent = service.accent;
+  const shellStyle = {
+    background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 58%, #ffffff 100%)',
+    borderColor: accent.edge
+  };
+
+  if (activeLane) {
+    const LaneIcon = serviceLaneIconMap[activeLane.id] || Layers3;
+    const laneStatus = getLaneStatusCopy(activeLane);
+
+    return (
+      <DashboardLayout>
+        <div className="mx-auto max-w-6xl px-4 py-8 md:px-8">
+          <div className="rounded-[32px] border bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.06)] md:p-8" style={shellStyle}>
+            <Link
+              to={`/services/${service.slug}`}
+              className="inline-flex items-center gap-2 text-sm font-black transition hover:opacity-75"
+              style={{ color: accent.bg }}
+            >
+              <ArrowLeft size={16} />
+              Back to {service.title} Launcher
+            </Link>
+
+            <div className="mt-7 flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+              <div className="max-w-3xl">
+                <div className="flex items-center gap-4">
+                  <ServiceLogo service={service} size="lg" />
+                  <div
+                    className="inline-flex rounded-full border bg-white px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.18em]"
+                    style={{ borderColor: accent.edge, color: accent.bg }}
+                  >
+                    {commandCenter.title} Lane
+                  </div>
+                </div>
+                <h1 className="mt-5 text-3xl font-black tracking-[-0.05em] text-slate-950 md:text-5xl">{activeLane.title}</h1>
+                <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600 md:text-base">{activeLane.subtitle}</p>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2 lg:w-[320px] lg:grid-cols-1">
+                <div className="rounded-[22px] border border-white/70 bg-white p-4">
+                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">Service</p>
+                  <p className="mt-3 text-lg font-black tracking-[-0.03em] text-slate-950">{service.title}</p>
+                </div>
+                <div className={`rounded-[22px] border px-4 py-4 text-sm font-black ${laneStatus.classes}`}>
+                  {laneStatus.label}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+              <section className="rounded-[28px] border border-white/70 bg-white p-5 shadow-[0_16px_40px_rgba(15,23,42,0.04)] md:p-6">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-2xl text-white"
+                    style={{ backgroundColor: accent.bg, color: accent.fg }}
+                  >
+                    <LaneIcon size={20} />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Workspace Lane</p>
+                    <h2 className="text-2xl font-black tracking-[-0.04em] text-slate-950">{activeLane.title}</h2>
+                  </div>
+                </div>
+
+                <div className="mt-5 grid gap-3 md:grid-cols-3">
+                  {activeLane.bullets.map((bullet) => (
+                    <div key={bullet} className="rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-bold leading-6 text-slate-700">
+                      {bullet}
+                    </div>
+                  ))}
+                </div>
+
+                {activeLane.liveMetrics?.length ? (
+                  <div className="mt-5">
+                    <p className="mb-3 text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Live Signals</p>
+                    <LiveMetricGrid metrics={activeLane.liveMetrics} />
+                  </div>
+                ) : null}
+
+                <ServiceLaneActionKit
+                  laneDetail={laneDetailState.data}
+                  loading={laneDetailState.loading}
+                  error={laneDetailState.error}
+                  accent={accent}
+                />
+
+                {activeLane.to &&
+                activeLane.status === 'live' &&
+                (laneDetailState.error || (!laneDetailState.loading && !laneDetailState.data)) ? (
+                  <Link
+                    to={activeLane.to}
+                    className="mt-6 inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-black text-white transition hover:opacity-90"
+                    style={{ backgroundColor: accent.bg, color: accent.fg }}
+                  >
+                    {activeLane.ctaLabel}
+                    <ArrowRight size={16} />
+                  </Link>
+                ) : activeLane.status !== 'live' ? (
+                  <div className="mt-6 rounded-[24px] border border-slate-200 bg-slate-50 px-5 py-4">
+                    <p className="text-sm font-black text-slate-950">This lane is registered, but live operations are not enabled yet.</p>
+                    <p className="mt-2 text-xs leading-6 text-slate-600">
+                      Keep the workspace visible while the service flow, backend adapter, or release gate is completed.
+                    </p>
+                  </div>
+                ) : null}
+              </section>
+
+              <aside className="space-y-4">
+                <div className="rounded-[28px] border border-white/70 bg-white p-5">
+                  <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Service Group</p>
+                  <h3 className="mt-3 text-xl font-black tracking-[-0.04em] text-slate-950">{service.category}</h3>
+                  <p className="mt-3 text-sm leading-7 text-slate-600">{commandCenter.description}</p>
+                </div>
+                <div className="rounded-[28px] border border-white/70 bg-white p-5">
+                  <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Other Lanes</p>
+                  <div className="mt-4 space-y-2">
+                    {commandCenter.lanes
+                      .filter((lane) => lane.id !== activeLane.id)
+                      .map((lane) => (
+                        <Link
+                          key={lane.id}
+                          to={`/services/${service.slug}?view=${lane.id}`}
+                          className="flex items-center justify-between rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-black text-slate-800 transition hover:border-slate-300"
+                        >
+                          {lane.title}
+                          <ArrowRight size={15} />
+                        </Link>
+                      ))}
+                  </div>
+                </div>
+              </aside>
+            </div>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  return (
+    <DashboardLayout>
+      <div className="mx-auto max-w-6xl px-4 py-8 md:px-8">
+        <div className="rounded-[32px] border bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.06)] md:p-8" style={shellStyle}>
+          <Link to="/services" className="inline-flex items-center gap-2 text-sm font-black text-slate-600 transition hover:text-slate-950">
+            <ArrowLeft size={16} />
+            Back to Services
+          </Link>
+
+          <div className="mt-7 flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+            <div className="max-w-3xl">
+              <div className="flex items-center gap-4">
+                <ServiceLogo service={service} size="lg" />
+                <div
+                  className="inline-flex rounded-full border bg-white px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.18em]"
+                  style={{ borderColor: accent.edge, color: accent.bg }}
+                >
+                  {commandCenter.eyebrow}
+                </div>
+              </div>
+              <h1 className="mt-5 text-3xl font-black tracking-[-0.05em] text-slate-950 md:text-5xl">
+                {commandCenter.title}
+              </h1>
+              <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600 md:text-base">{commandCenter.description}</p>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2 lg:w-[320px] lg:grid-cols-1">
+              <div className="rounded-[22px] border border-white/70 bg-white p-4">
+                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">Current balance</p>
+                <p className="mt-3 text-2xl font-black tracking-[-0.05em] text-slate-950">{points.toLocaleString()} pts</p>
+              </div>
+              <div className="rounded-[22px] border border-white/70 bg-white p-4">
+                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">Service status</p>
+                <p className="mt-3 text-lg font-black tracking-[-0.03em] text-slate-950">{commandCenter.statusLabel}</p>
+              </div>
+            </div>
+          </div>
+
+          {commandCenterSummaryLoading || commandCenterSummaryError || commandCenter.liveMetrics?.length ? (
+            <div className="mt-8 rounded-[28px] border border-white/70 bg-white p-5">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Live Summary</p>
+                  <h2 className="mt-2 text-xl font-black tracking-[-0.04em] text-slate-950">Workspace signals</h2>
+                </div>
+                {commandCenterSummaryLoading ? (
+                  <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">
+                    Loading
+                  </div>
+                ) : null}
+              </div>
+              {commandCenterSummaryError ? (
+                <p className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-800">
+                  {commandCenterSummaryError}
+                </p>
+              ) : null}
+              <div className="mt-4">
+                <LiveMetricGrid metrics={commandCenter.liveMetrics || []} />
+              </div>
+            </div>
+          ) : null}
+
+          <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {commandCenter.lanes.map((lane) => {
+              const LaneIcon = serviceLaneIconMap[lane.id] || Layers3;
+              const laneStatus = getLaneStatusCopy(lane);
+              const primaryMetric = lane.liveMetrics?.[0];
+
+              return (
+                <Link
+                  key={lane.id}
+                  to={`/services/${service.slug}?view=${lane.id}`}
+                  className="rounded-[26px] border border-white/70 bg-white px-5 py-5 text-left shadow-[0_14px_34px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_42px_rgba(15,23,42,0.08)]"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-2xl text-white"
+                      style={{ backgroundColor: accent.bg, color: accent.fg }}
+                    >
+                      <LaneIcon size={19} />
+                    </div>
+                    <div className={`rounded-full border px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] ${laneStatus.classes}`}>
+                      {laneStatus.label}
+                    </div>
+                  </div>
+                  <h2 className="mt-5 text-xl font-black tracking-[-0.04em] text-slate-950">{lane.title}</h2>
+                  <p className="mt-2 text-sm leading-7 text-slate-600">{lane.subtitle}</p>
+                  {primaryMetric ? (
+                    <div className={`mt-4 rounded-[16px] border px-3 py-2 ${getLiveMetricToneClasses(primaryMetric.tone)}`}>
+                      <p className="text-[10px] font-black uppercase tracking-[0.14em] opacity-70">{primaryMetric.label}</p>
+                      <p className="mt-1 text-sm font-black">{primaryMetric.value}</p>
+                    </div>
+                  ) : null}
+                  <div className="mt-5 inline-flex items-center gap-2 text-sm font-black" style={{ color: accent.bg }}>
+                    Open lane
+                    <ArrowRight size={16} />
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+
+          <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+            <section className="rounded-[28px] border border-white/70 bg-white p-5">
+              <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Capabilities</p>
+              <div className="mt-4 grid gap-3 md:grid-cols-4">
+                {commandCenter.capabilities.map((capability) => (
+                  <div key={capability} className="rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-700">
+                    {capability}
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <aside className="space-y-4">
+              {estimatedCost !== null ? (
+                <div className={`rounded-[28px] border px-5 py-5 ${needsTopUp ? 'border-amber-200 bg-amber-50' : 'border-emerald-200 bg-emerald-50'}`}>
+                  <div className="flex items-start gap-3">
+                    <Wallet size={18} className={needsTopUp ? 'mt-0.5 text-amber-700' : 'mt-0.5 text-emerald-700'} />
+                    <div>
+                      <p className="text-sm font-black text-slate-950">
+                        {needsTopUp
+                          ? `Your balance is below the ${estimatedCost.toLocaleString()} point recommendation.`
+                          : `Your balance is ready for ${service.title}.`}
+                      </p>
+                      <p className="mt-2 text-xs leading-6 text-slate-600">
+                        Recommended packs: {recommendedPacks.map((pack) => `${pack.toLocaleString()} pts`).join(' · ')}
+                      </p>
+                    </div>
+                  </div>
+                  {needsTopUp ? (
+                    <Link
+                      to={`/buy-point?intent=${service.slug}`}
+                      className="mt-4 inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-xs font-black text-white transition hover:opacity-90"
+                      style={{ backgroundColor: accent.bg, color: accent.fg }}
+                    >
+                      Buy Points
+                      <ArrowRight size={15} />
+                    </Link>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {relatedServices.length ? (
+                <div className="rounded-[28px] border border-white/70 bg-white p-5">
+                  <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Related Services</p>
+                  <div className="mt-4 space-y-2">
+                    {relatedServices.map((related) => (
+                      <Link
+                        key={related.slug}
+                        to={`/services/${related.slug}`}
+                        className="flex items-center justify-between rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-black text-slate-800 transition hover:border-slate-300"
+                      >
+                        <span className="flex min-w-0 items-center gap-3">
+                          <ServiceLogo service={related} size="sm" />
+                          <span className="truncate">{related.title}</span>
+                        </span>
+                        <ArrowRight size={15} />
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </aside>
+          </div>
+        </div>
+      </div>
+    </DashboardLayout>
+  );
+}
+
 export default function ServiceDetailPage() {
   const { slug } = useParams();
   const [searchParams] = useSearchParams();
   const { config, profile, user } = useAppContext();
   const service = getServiceBySlug(slug || '');
+  const serviceCommandCenter = service ? getServiceCommandCenter(service) : null;
+  const hasServiceCommandCenter = Boolean(serviceCommandCenter);
   const points = Number(profile?.points || 0);
   const providerLauncher = getPaymentProviderLauncher(slug || '');
   const officialView = searchParams.get('view');
   const providerView = normalizePaymentProviderView(officialView);
   const activeProviderLane = providerLauncher?.lanes.find((lane) => lane.id === providerView);
+  const serviceCommandView = normalizeServiceCommandCenterView(officialView, serviceCommandCenter);
   const [providerRegistryState, setProviderRegistryState] = useState({
     providers: [],
     invoiceFeatures: [],
@@ -562,6 +1201,16 @@ export default function ServiceDetailPage() {
   });
   const [providerBalanceState, setProviderBalanceState] = useState({
     balance: null,
+    loading: false,
+    error: ''
+  });
+  const [serviceCommandSummaryState, setServiceCommandSummaryState] = useState({
+    data: null,
+    loading: false,
+    error: ''
+  });
+  const [serviceLaneDetailState, setServiceLaneDetailState] = useState({
+    data: null,
     loading: false,
     error: ''
   });
@@ -643,6 +1292,82 @@ export default function ServiceDetailPage() {
     };
   }, [activeProviderLane?.id, activeProviderLane?.status, providerLauncher, user?.isAdmin]);
 
+  useEffect(() => {
+    if (!service?.slug || !hasServiceCommandCenter) {
+      setServiceCommandSummaryState({ data: null, loading: false, error: '' });
+      return undefined;
+    }
+
+    let cancelled = false;
+    setServiceCommandSummaryState((previous) => ({ ...previous, loading: true, error: '' }));
+
+    getServiceCommandCenterSummary(service.slug)
+      .then((payload) => {
+        if (cancelled) {
+          return;
+        }
+
+        setServiceCommandSummaryState({
+          data: payload || null,
+          loading: false,
+          error: ''
+        });
+      })
+      .catch((error) => {
+        if (cancelled) {
+          return;
+        }
+
+        setServiceCommandSummaryState({
+          data: null,
+          loading: false,
+          error: error?.message || 'Live service summary could not be loaded.'
+        });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [service?.slug, hasServiceCommandCenter]);
+
+  useEffect(() => {
+    if (!service?.slug || !hasServiceCommandCenter || !serviceCommandView) {
+      setServiceLaneDetailState({ data: null, loading: false, error: '' });
+      return undefined;
+    }
+
+    let cancelled = false;
+    setServiceLaneDetailState({ data: null, loading: true, error: '' });
+
+    getServiceLaneDetail(service.slug, serviceCommandView)
+      .then((payload) => {
+        if (cancelled) {
+          return;
+        }
+
+        setServiceLaneDetailState({
+          data: payload || null,
+          loading: false,
+          error: ''
+        });
+      })
+      .catch((error) => {
+        if (cancelled) {
+          return;
+        }
+
+        setServiceLaneDetailState({
+          data: null,
+          loading: false,
+          error: error?.message || 'Lane action kit could not be loaded.'
+        });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [service?.slug, hasServiceCommandCenter, serviceCommandView]);
+
   if (!service) {
     return <Navigate to="/services" replace />;
   }
@@ -653,8 +1378,13 @@ export default function ServiceDetailPage() {
   const preview = getServicePreview(service);
   const recommendedPacks = getRecommendedPointPacks(service, config);
   const needsTopUp = estimatedCost !== null && points < estimatedCost;
-  const isFlashEmailService = service.category === 'Flash Emails';
-  const isBankSlipService = service.category === 'Bank Slips';
+  const hydratedServiceCommandCenter = mergeServiceCommandCenterSummary(
+    serviceCommandCenter,
+    serviceCommandSummaryState.data
+  );
+  const activeServiceLane = hydratedServiceCommandCenter?.lanes.find((lane) => lane.id === serviceCommandView);
+  const isFlashEmailService = service.category === 'Verified Notifications';
+  const isBankSlipService = service.category === 'Verified Wallets';
   const isPayPalService = service.slug === 'paypal';
   const isOfficialInvoiceView = isPayPalService && officialView === 'official-invoicing';
   const isOfficialPayoutView = isPayPalService && officialView === 'official-payouts';
@@ -1001,16 +1731,34 @@ export default function ServiceDetailPage() {
     );
   }
 
+  if (hydratedServiceCommandCenter) {
+    return (
+      <ServiceCommandCenterPage
+        service={service}
+        commandCenter={hydratedServiceCommandCenter}
+        activeLane={activeServiceLane}
+        points={points}
+        estimatedCost={estimatedCost}
+        recommendedPacks={recommendedPacks}
+        needsTopUp={needsTopUp}
+        relatedServices={relatedServices}
+        commandCenterSummaryLoading={serviceCommandSummaryState.loading}
+        commandCenterSummaryError={serviceCommandSummaryState.error}
+        laneDetailState={serviceLaneDetailState}
+      />
+    );
+  }
+
   if (isFlashEmailService) {
     const launchOptions = [
       {
-        title: 'Custom Mail',
-        subtitle: 'Open the editable flash-mail builder for this service.',
+        title: 'Custom Notification',
+        subtitle: 'Open the editable notification builder for this service.',
         to: `/dashboard/generate?type=email&service=${service.slug}&mailType=custom`
       },
       {
-        title: 'Deposit Mail',
-        subtitle: 'Use the same service flow with deposit-mail context applied.',
+        title: 'Deposit Notification',
+        subtitle: 'Use the same service flow with deposit context applied.',
         to: `/dashboard/generate?type=email&service=${service.slug}&mailType=deposit`
       }
     ];
@@ -1261,7 +2009,7 @@ export default function ServiceDetailPage() {
                       <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#003087]">Official PayPal Alternative</p>
                       <h2 className="mt-2 text-xl font-black tracking-[-0.04em] text-slate-950">Use the real invoice and payout operations when you need PayPal-hosted flows.</h2>
                       <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-600">
-                        This keeps the flash-mail builder available while exposing the production-facing PayPal back office for hosted invoices, payout tracking, provider sync, and remediation.
+                        This keeps notification drafting available while exposing the production-facing PayPal back office for hosted invoices, payout tracking, provider sync, and remediation.
                       </p>
                     </div>
                     <div className="inline-flex rounded-full border border-[#b5c7ea] bg-white/85 px-3 py-1 text-[11px] font-black uppercase tracking-[0.16em] text-[#003087]">
@@ -1353,9 +2101,9 @@ export default function ServiceDetailPage() {
                 <ServiceLogo service={service} size="lg" />
               </div>
               <h1 className="mt-5 text-3xl font-black tracking-[-0.05em] text-slate-950 md:text-5xl">{service.title}</h1>
-              <p className="mt-3 text-base font-semibold text-slate-600">{isLive ? `${service.title} bank slips` : 'Bank slip flow coming soon'}</p>
+              <p className="mt-3 text-base font-semibold text-slate-600">{isLive ? `${service.title} wallet records` : 'Wallet record flow coming soon'}</p>
               <p className="mt-3 text-sm leading-7 text-slate-500">
-                This launcher keeps the bank-slip brands simple and direct: open the branded slip builder, then generate the transfer proof without extra navigation noise.
+                This launcher keeps wallet brands simple and direct: open the branded record builder, then generate a Transferly support record without extra navigation noise.
               </p>
 
               {estimatedCost !== null ? (
@@ -1384,8 +2132,8 @@ export default function ServiceDetailPage() {
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="text-lg font-black tracking-[-0.03em] text-slate-950">Generate Slip</p>
-                        <p className="mt-2 text-sm leading-7 text-slate-600">Open the branded bank-slip builder with {service.title} context already applied.</p>
+                        <p className="text-lg font-black tracking-[-0.03em] text-slate-950">Generate Record</p>
+                        <p className="mt-2 text-sm leading-7 text-slate-600">Open the branded wallet-record builder with {service.title} context already applied.</p>
                       </div>
                       <ArrowRight size={18} className="mt-1 text-slate-400" />
                     </div>
@@ -1395,7 +2143,7 @@ export default function ServiceDetailPage() {
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="text-lg font-black tracking-[-0.03em] text-slate-950">Coming Soon</p>
-                        <p className="mt-2 text-sm leading-7 text-slate-600">Keep this branded entry point in place until the {service.title} bank-slip flow is released.</p>
+                        <p className="mt-2 text-sm leading-7 text-slate-600">Keep this branded entry point in place until the {service.title} wallet-record flow is released.</p>
                       </div>
                       <Clock3 size={18} className="mt-1 text-slate-400" />
                     </div>
@@ -1549,7 +2297,7 @@ export default function ServiceDetailPage() {
                       <p className="text-sm font-black text-slate-950">
                         {needsTopUp
                           ? `You need at least ${estimatedCost.toLocaleString()} points for this flow.`
-                          : `Your balance is ready for this ${service.category === 'Bank Slips' ? 'bank slip' : 'flash email'} flow.`}
+                          : `Your balance is ready for this ${service.category === 'Verified Wallets' ? 'wallet record' : 'notification'} flow.`}
                       </p>
                       <p className="mt-2 text-xs leading-6 text-slate-600">
                         Recommended top-up packs: {recommendedPacks.map((pack) => `${pack.toLocaleString()} pts`).join(' · ')}

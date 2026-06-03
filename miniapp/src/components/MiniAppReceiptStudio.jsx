@@ -19,8 +19,8 @@ import { useTelegramMiniApp } from '../context/TelegramMiniAppContext';
 import { serviceCatalog } from '../lib/servicesCatalog';
 
 const steps = ['Service', 'Details', 'Preview'];
-const bankServices = serviceCatalog.filter((service) => service.category === 'Bank Slips' && service.status === 'available');
-const emailServices = serviceCatalog.filter((service) => service.category === 'Flash Emails' && service.status === 'available');
+const bankServices = serviceCatalog.filter((service) => service.category === 'Verified Wallets' && service.status === 'available');
+const emailServices = serviceCatalog.filter((service) => service.category === 'Verified Notifications' && service.status === 'available');
 
 function generateTransactionRef() {
   return `TRX${Math.random().toString(36).substring(2, 14).toUpperCase()}`;
@@ -429,8 +429,8 @@ export default function MiniAppReceiptStudio() {
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-2 rounded-[24px] bg-[var(--tg-section-bg-color)] p-2 shadow-sm">
             {[
-              ['bank', 'Bank Slip', Receipt],
-              ['email', 'Flash Mail', Mail]
+              ['bank', 'Wallet Record', Receipt],
+              ['email', 'Notification', Mail]
             ].map(([key, label, Icon]) => (
               <button
                 key={key}

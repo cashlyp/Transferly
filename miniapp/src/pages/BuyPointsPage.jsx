@@ -184,7 +184,7 @@ export default function BuyPointsPage() {
                     <p className="mt-2 text-2xl font-black tracking-[-0.04em] text-slate-950">{pack.toLocaleString()}</p>
                     <p className="mt-2 text-xs leading-6 text-slate-600">
                       {suggestedCost
-                        ? `${Math.max(1, Math.floor(pack / suggestedCost))} ${intentService.category === 'Bank Slips' ? 'bank-slip' : 'flash-mail'} runs at current pricing.`
+                        ? `${Math.max(1, Math.floor(pack / suggestedCost))} ${intentService.category === 'Verified Wallets' ? 'wallet-record' : 'notification'} runs at current pricing.`
                         : 'A practical starting balance for utility and support tools.'}
                     </p>
                   </button>

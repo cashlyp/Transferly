@@ -1,27 +1,27 @@
 export const serviceCatalog = [
   {
     slug: 'ai-reply',
-    title: 'AI Reply',
+    title: 'Support AI Reply',
     category: 'Featured',
     badge: 'New',
     status: 'available',
-    description: 'Smart AI-powered replies for your conversations. Paste a message or screenshot and get the perfect response.',
+    description: 'Draft verified support replies, payout updates, and customer messages from one Telegram-ready workspace.',
     detail:
-      'Use this flow when you want quick drafting help before sending a message. It fits the live Transferly pattern of lightweight utility tools that sit beside the core receipt flows.',
-    launchTo: '/transactions',
-    launchLabel: 'Open Activity',
+      'Use this flow when an operator needs a fast, consistent reply before sending a customer update. It keeps Transferly support language aligned with real invoices, payouts, and receipt status.',
+    launchTo: '/miniapp/support',
+    launchLabel: 'Open Support AI',
     accent: { bg: '#111827', fg: '#f8fafc', edge: '#374151', glow: 'rgba(17,24,39,0.28)' },
     mark: 'AI'
   },
   {
     slug: 'articles',
-    title: 'Articles',
-    category: 'Premium Articles',
+    title: 'Ops Playbooks',
+    category: 'Knowledge Library',
     badge: 'Utility',
     status: 'available',
-    description: 'Buy and read premium article bundles inside the same workspace.',
+    description: 'Save premium operating guides, provider setup notes, and payout runbooks inside the same workspace.',
     detail:
-      'The live app exposes articles as a separate utility surface. This implementation keeps the dedicated service page and positions it as a content-led workspace rather than a generator.',
+      'This keeps article-style content as a safe knowledge surface for onboarding operators, resolving provider setup issues, and documenting repeatable workflows.',
     launchTo: '/transactions',
     launchLabel: 'View Orders',
     accent: { bg: '#0f172a', fg: '#f8fafc', edge: '#334155', glow: 'rgba(15,23,42,0.28)' },
@@ -29,13 +29,13 @@ export const serviceCatalog = [
   },
   {
     slug: 'faker-data',
-    title: 'Faker Data',
-    category: 'Data Generator',
+    title: 'Sandbox Test Data',
+    category: 'Sandbox Tools',
     badge: 'Utility',
     status: 'available',
-    description: 'Generate quick fake data sets and utility payloads for demos and support workflows.',
+    description: 'Create clearly marked demo payloads for QA, screenshots, and internal sandbox training.',
     detail:
-      'This mirrors the live catalog item that sits alongside receipts and flash emails. It is presented as a distinct tool even if your current backend does not yet generate dedicated faker outputs.',
+      'This mirrors the utility shape without creating deceptive personal records. Outputs should stay visibly sandboxed and separated from production customer data.',
     launchTo: '/transactions',
     launchLabel: 'Open Activity',
     accent: { bg: '#164e63', fg: '#ecfeff', edge: '#0f766e', glow: 'rgba(8,145,178,0.22)' },
@@ -44,40 +44,40 @@ export const serviceCatalog = [
   {
     slug: 'opay',
     title: 'Opay',
-    category: 'Bank Slips',
+    category: 'Verified Wallets',
     badge: 'Popular',
     status: 'available',
-    description: 'Generate Opay-style transfer slip visuals from the bank receipt workspace.',
+    description: 'Open an Opay wallet record workspace for verified transfer notes and internal customer support.',
     detail:
-      'Opay is one of the first-click bank-slip brands in the live app. The dedicated page funnels into the existing bank slip generator with Opay-specific framing.',
+      'Opay is treated as a first-click wallet workspace. It routes into the existing receipt studio while framing the output as a verified Transferly record, not a bank-issued document.',
     launchTo: '/dashboard/generate?type=bank&service=opay',
-    launchLabel: 'Open Bank Slip Tool',
+    launchLabel: 'Open Wallet Record Tool',
     accent: { bg: '#16a34a', fg: '#f0fdf4', edge: '#166534', glow: 'rgba(34,197,94,0.24)' },
     mark: 'OP'
   },
   {
     slug: 'kuda',
     title: 'Kuda',
-    category: 'Bank Slips',
+    category: 'Verified Wallets',
     badge: 'Popular',
     status: 'available',
-    description: 'Launch the Kuda-style transfer slip workflow from a dedicated service page.',
+    description: 'Launch a Kuda wallet record workflow from a dedicated service page.',
     detail:
-      'Kuda follows the same structure as Opay in the live catalog. It lands in the bank slip flow, but the click path is its own branded service page.',
+      'Kuda follows the same dedicated-entry pattern as Opay while keeping the output framed as a Transferly support record.',
     launchTo: '/dashboard/generate?type=bank&service=kuda',
-    launchLabel: 'Open Bank Slip Tool',
+    launchLabel: 'Open Wallet Record Tool',
     accent: { bg: '#7c3aed', fg: '#f5f3ff', edge: '#5b21b6', glow: 'rgba(124,58,237,0.22)' },
     mark: 'KU'
   },
   {
     slug: 'palmpay',
     title: 'Palmpay',
-    category: 'Bank Slips',
+    category: 'Verified Wallets',
     badge: 'Soon',
     status: 'comingSoon',
-    description: 'Preview the upcoming Palmpay bank slip flow.',
+    description: 'Preview the upcoming Palmpay wallet record flow.',
     detail:
-      'The captured live app shows Palmpay with a coming-soon treatment. This page preserves that expectation instead of pretending the generator already supports it.',
+      'This page preserves the coming-soon treatment without presenting unreleased wallet tooling as available.',
     launchTo: '',
     launchLabel: 'Coming Soon',
     accent: { bg: '#15803d', fg: '#f0fdf4', edge: '#14532d', glow: 'rgba(21,128,61,0.2)' },
@@ -86,56 +86,56 @@ export const serviceCatalog = [
   {
     slug: 'binance',
     title: 'Binance',
-    category: 'Flash Emails',
+    category: 'Verified Notifications',
     badge: 'Live',
     status: 'available',
-    description: 'Open the flash-mail flow with Binance positioning and branding context.',
+    description: 'Open a Binance notification workspace for clearly marked Transferly status updates.',
     detail:
-      'The live app exposes Binance as a first-class flash email service. This dedicated page routes into the existing email receipt builder with Binance selected in context.',
+      'This dedicated page routes into the existing email-style receipt builder with Binance selected in context while keeping the output framed as a Transferly notification.',
     launchTo: '/dashboard/generate?type=email&service=binance',
-    launchLabel: 'Open Flash Mail Tool',
+    launchLabel: 'Open Notification Tool',
     accent: { bg: '#f59e0b', fg: '#1f2937', edge: '#b45309', glow: 'rgba(245,158,11,0.24)' },
     mark: 'BI'
   },
   {
     slug: 'bybit',
     title: 'Bybit',
-    category: 'Flash Emails',
+    category: 'Verified Notifications',
     badge: 'Live',
     status: 'available',
-    description: 'Bybit-branded flash email workflow for transactional or support-style outputs.',
+    description: 'Bybit notification workflow for transactional or support-style Transferly outputs.',
     detail:
-      'Bybit lives in the same flash email family as Binance and Coinbase on the captured live services page.',
+      'Bybit lives in the same verified notification family as Binance and Coinbase.',
     launchTo: '/dashboard/generate?type=email&service=bybit',
-    launchLabel: 'Open Flash Mail Tool',
+    launchLabel: 'Open Notification Tool',
     accent: { bg: '#111827', fg: '#fef3c7', edge: '#374151', glow: 'rgba(17,24,39,0.28)' },
     mark: 'BY'
   },
   {
     slug: 'coinbase',
     title: 'Coinbase',
-    category: 'Flash Emails',
+    category: 'Verified Notifications',
     badge: 'Live',
     status: 'available',
-    description: 'Coinbase flash email service page routed into the email generator.',
+    description: 'Coinbase notification service page routed into the Transferly notification builder.',
     detail:
-      'Coinbase is a core flash email brand in the captured live catalog. The dedicated page keeps that branded click path while reusing the current email tooling.',
+      'Coinbase is kept as a first-class notification entry while reusing the current email-style receipt tooling.',
     launchTo: '/dashboard/generate?type=email&service=coinbase',
-    launchLabel: 'Open Flash Mail Tool',
+    launchLabel: 'Open Notification Tool',
     accent: { bg: '#2563eb', fg: '#eff6ff', edge: '#1d4ed8', glow: 'rgba(37,99,235,0.24)' },
     mark: 'CB'
   },
   {
     slug: 'paypal',
     title: 'PayPal',
-    category: 'Flash Emails',
+    category: 'Payment Providers',
     badge: 'Live',
     status: 'available',
-    description: 'PayPal-styled flash email flow with its own branded service surface.',
+    description: 'PayPal provider workspace for invoices, payout review, notifications, and balance readiness.',
     detail:
-      'PayPal is one of the most visible services in the live app. This page preserves that prominence and routes into the email receipt generator with PayPal preselected in context.',
-    launchTo: '/dashboard/generate?type=email&service=paypal',
-    launchLabel: 'Open Flash Mail Tool',
+      'PayPal stays prominent, but the service now prioritizes the production provider launcher and keeps notification-style outputs as a secondary workflow.',
+    launchTo: '/services/paypal',
+    launchLabel: 'Open PayPal Launcher',
     accent: { bg: '#003087', fg: '#eff6ff', edge: '#1d4ed8', glow: 'rgba(0,48,135,0.24)' },
     mark: 'PP'
   },
@@ -198,196 +198,196 @@ export const serviceCatalog = [
   {
     slug: 'crypto-com',
     title: 'Crypto.com',
-    category: 'Flash Emails',
+    category: 'Verified Notifications',
     badge: 'Live',
     status: 'available',
-    description: 'Crypto.com flash email surface with direct access into the email builder.',
+    description: 'Crypto.com notification surface with direct access into the Transferly notification builder.',
     detail:
-      'The captured live services page places Crypto.com in the same active flash-email set as PayPal, Binance, and Coinbase.',
+      'Crypto.com is part of the verified notification set for exchange and wallet status updates.',
     launchTo: '/dashboard/generate?type=email&service=crypto-com',
-    launchLabel: 'Open Flash Mail Tool',
+    launchLabel: 'Open Notification Tool',
     accent: { bg: '#1d4ed8', fg: '#eff6ff', edge: '#1e40af', glow: 'rgba(29,78,216,0.24)' },
     mark: 'CC'
   },
   {
     slug: 'wise',
     title: 'Wise',
-    category: 'Flash Emails',
+    category: 'Payment Providers',
     badge: 'Live',
     status: 'available',
-    description: 'Wise-branded flash mail tool page that routes into the existing email workflow.',
+    description: 'Wise provider launcher for transfer tracking, payout readiness, and customer-facing status updates.',
     detail:
-      'Wise is grouped under flash emails in the captured live catalog. This page preserves that structure and routes to the generator.',
-    launchTo: '/dashboard/generate?type=email&service=wise',
-    launchLabel: 'Open Flash Mail Tool',
+      'Wise is surfaced as a production provider workspace instead of a deceptive mail generator.',
+    launchTo: '/services/wise',
+    launchLabel: 'Open Wise Launcher',
     accent: { bg: '#14b8a6', fg: '#ecfeff', edge: '#0f766e', glow: 'rgba(20,184,166,0.24)' },
     mark: 'WI'
   },
   {
     slug: 'cash-app',
     title: 'Cash App',
-    category: 'Flash Emails',
+    category: 'Verified Notifications',
     badge: 'New',
     status: 'available',
-    description: 'Cash App flash email flow with the same one-click service-page entry used in the live app.',
+    description: 'Cash App notification flow with a one-click service-page entry.',
     detail:
-      'Cash App is shown as a new flash email service in the captured live page. The dedicated page mirrors that positioning and routes into the existing builder.',
+      'Cash App is available as a verified notification entry routed into the existing builder.',
     launchTo: '/dashboard/generate?type=email&service=cash-app',
-    launchLabel: 'Open Flash Mail Tool',
+    launchLabel: 'Open Notification Tool',
     accent: { bg: '#16a34a', fg: '#f0fdf4', edge: '#166534', glow: 'rgba(22,163,74,0.24)' },
     mark: 'CA'
   },
   {
     slug: 'zelle',
     title: 'Zelle',
-    category: 'Flash Emails',
+    category: 'Verified Notifications',
     badge: 'New',
     status: 'available',
-    description: 'Zelle flash email service with its own branded landing page before launch.',
+    description: 'Zelle notification service with its own branded landing page before launch.',
     detail:
-      'Zelle appears as a newer flash-email brand in the live catalog. This keeps the same service-page-first click model.',
+      'Zelle keeps the service-page-first click model while using verified notification language.',
     launchTo: '/dashboard/generate?type=email&service=zelle',
-    launchLabel: 'Open Flash Mail Tool',
+    launchLabel: 'Open Notification Tool',
     accent: { bg: '#6d28d9', fg: '#f5f3ff', edge: '#5b21b6', glow: 'rgba(109,40,217,0.22)' },
     mark: 'ZE'
   },
   {
     slug: 'venmo',
     title: 'Venmo',
-    category: 'Flash Emails',
+    category: 'Verified Notifications',
     badge: 'New',
     status: 'available',
-    description: 'Venmo-styled flash email tool page with direct access into the email builder.',
+    description: 'Venmo notification tool page with direct access into the Transferly builder.',
     detail:
-      'Venmo is shown as a new flash-email addition in the live service grid. This page makes that service feel first-class before the generator opens.',
+      'Venmo is available as a first-class notification entry before the builder opens.',
     launchTo: '/dashboard/generate?type=email&service=venmo',
-    launchLabel: 'Open Flash Mail Tool',
+    launchLabel: 'Open Notification Tool',
     accent: { bg: '#1d4ed8', fg: '#eff6ff', edge: '#1e40af', glow: 'rgba(29,78,216,0.22)' },
     mark: 'VE'
   },
   {
     slug: 'trust-wallet',
     title: 'Trust Wallet',
-    category: 'Flash Emails',
+    category: 'Verified Notifications',
     badge: 'New',
     status: 'available',
-    description: 'Trust Wallet flash email surface built into the same Transferly flow.',
+    description: 'Trust Wallet notification surface built into the same Transferly flow.',
     detail:
-      'Trust Wallet is treated as a new flash-email service in the captured live app. This page mirrors that launch posture.',
+      'Trust Wallet is treated as a new verified notification service in the Transferly catalog.',
     launchTo: '/dashboard/generate?type=email&service=trust-wallet',
-    launchLabel: 'Open Flash Mail Tool',
+    launchLabel: 'Open Notification Tool',
     accent: { bg: '#2563eb', fg: '#eff6ff', edge: '#1d4ed8', glow: 'rgba(37,99,235,0.24)' },
     mark: 'TW'
   },
   {
     slug: 'gcash',
     title: 'GCash',
-    category: 'Flash Emails',
+    category: 'Verified Notifications',
     badge: 'New',
     status: 'available',
-    description: 'GCash flash email flow with dedicated catalog entry and branded landing page.',
+    description: 'GCash notification flow with a dedicated catalog entry and branded landing page.',
     detail:
-      'GCash appears in the captured live flash-email list as a newer entry. The page keeps that brand visible even though the generator underneath is shared.',
+      'GCash stays visible as a newer notification entry even though the builder underneath is shared.',
     launchTo: '/dashboard/generate?type=email&service=gcash',
-    launchLabel: 'Open Flash Mail Tool',
+    launchLabel: 'Open Notification Tool',
     accent: { bg: '#0ea5e9', fg: '#ecfeff', edge: '#0369a1', glow: 'rgba(14,165,233,0.24)' },
     mark: 'GC'
   },
   {
     slug: 'crypto-receipts',
-    title: 'Crypto Receipts',
-    category: 'Crypto Receipts',
+    title: 'Receipt Vault',
+    category: 'Receipt Vault',
     badge: 'Live',
     status: 'available',
-    description: 'Crypto-focused receipt workflow presented as its own service lane.',
+    description: 'Store crypto and provider receipt records in a searchable customer support vault.',
     detail:
-      'The live catalog separates crypto receipts from general flash emails. This page keeps that product distinction even before a dedicated crypto form exists locally.',
-    launchTo: '/transactions',
-    launchLabel: 'Open Activity',
+      'This keeps crypto receipt review distinct from provider notifications and gives operators a safer way to inspect settlement evidence.',
+    launchTo: '/miniapp/vault',
+    launchLabel: 'Open Receipt Vault',
     accent: { bg: '#0f172a', fg: '#fef3c7', edge: '#334155', glow: 'rgba(15,23,42,0.3)' },
     mark: 'CR'
   },
   {
     slug: 'support-sites',
-    title: 'Support Sites',
-    category: 'Support Pages',
+    title: 'Support Desk',
+    category: 'Support Desk',
     badge: 'Suite',
     status: 'available',
-    description: 'Support-style pages and operational landing surfaces inside the service catalog.',
+    description: 'Manage help content, escalation states, and customer support work without cloning third-party pages.',
     detail:
-      'The captured live services page labels this family as support pages. This dedicated detail screen routes into your existing help/support material.',
-    launchTo: '/help',
-    launchLabel: 'Open Support Area',
+      'This dedicated surface routes to Transferly support material and avoids any external brand impersonation.',
+    launchTo: '/miniapp/support',
+    launchLabel: 'Open Support Desk',
     accent: { bg: '#334155', fg: '#f8fafc', edge: '#0f172a', glow: 'rgba(51,65,85,0.24)' },
     mark: 'SS'
   },
   {
     slug: 'pass-clone',
-    title: 'Pass Clone',
-    category: 'Password Clone',
+    title: 'Security Center',
+    category: 'Security Center',
     badge: 'Suite',
     status: 'available',
-    description: 'Password-clone style operational page surface as shown in the live catalog.',
+    description: 'Review account safety, provider readiness, webhook posture, and audit-sensitive actions.',
     detail:
-      'Pass Clone appears as its own service in the captured live page. The detail route preserves that separate click target even though the current app still treats it as informational.',
-    launchTo: '/help',
-    launchLabel: 'Open Help',
+      'This replaces credential-capture style tooling with a safe security command center for Transferly operators.',
+    launchTo: '/miniapp/security',
+    launchLabel: 'Open Security Center',
     accent: { bg: '#1f2937', fg: '#f8fafc', edge: '#111827', glow: 'rgba(31,41,55,0.24)' },
     mark: 'PC'
   },
   {
     slug: 'wallet-tracker',
-    title: 'Wallet Tracker',
-    category: 'Wallet Tracker',
+    title: 'Provider Balance Tracker',
+    category: 'Provider Balance Tracker',
     badge: 'New',
     status: 'available',
-    description: 'Track wallet-related activity through a dedicated service lane.',
+    description: 'Track provider balances, payout holds, settlement windows, and wallet activity in one lane.',
     detail:
-      'This is treated as a new utility surface in the captured live app. The page gives it a distinct home even though your local implementation currently routes to activity history.',
-    launchTo: '/transactions',
-    launchLabel: 'Open Activity',
+      'This turns the wallet-tracker idea into an operations view for real Transferly provider balances and payout readiness.',
+    launchTo: '/miniapp/wallet',
+    launchLabel: 'Open Balance Tracker',
     accent: { bg: '#0f766e', fg: '#ecfeff', edge: '#115e59', glow: 'rgba(15,118,110,0.24)' },
     mark: 'WT'
   },
   {
     slug: 'qr-code',
-    title: 'QR Code',
-    category: 'QR Code Generator',
+    title: 'Payment QR',
+    category: 'Payment QR',
     badge: 'New',
     status: 'available',
-    description: 'QR utility flow with its own service surface and brand tile.',
+    description: 'Create branded payment QR entry points for invoices, payment links, and customer checkout handoff.',
     detail:
       'The captured live service grid treats QR Code as a separate utility entry, so this page makes it directly addressable and catalog-driven.',
-    launchTo: '/transactions',
-    launchLabel: 'Open Activity',
+    launchTo: '/miniapp/studio',
+    launchLabel: 'Open QR Workspace',
     accent: { bg: '#ea580c', fg: '#fff7ed', edge: '#c2410c', glow: 'rgba(234,88,12,0.22)' },
     mark: 'QR'
   },
   {
     slug: 'link-shortener',
-    title: 'Link Shortener',
-    category: 'Link Shortener',
+    title: 'Payment Link Shortener',
+    category: 'Payment Links',
     badge: 'New',
     status: 'available',
-    description: 'Short-link utility page modeled after the live service catalog.',
+    description: 'Turn long checkout, invoice, and receipt links into trackable payment links.',
     detail:
       'Link Shortener sits in the utility tail of the captured live list. The dedicated service route keeps it discoverable and aligned with the live IA.',
-    launchTo: '/transactions',
-    launchLabel: 'Open Activity',
+    launchTo: '/miniapp/activity',
+    launchLabel: 'Open Payment Links',
     accent: { bg: '#7c2d12', fg: '#fff7ed', edge: '#9a3412', glow: 'rgba(124,45,18,0.22)' },
     mark: 'LS'
   },
   {
     slug: 'investinnova',
-    title: 'Investinnova - Investment platform',
-    category: 'Scripts',
-    badge: '95,000 pts',
+    title: 'Workflow Templates',
+    category: 'Template Marketplace',
+    badge: 'Premium',
     status: 'available',
-    description: 'Script-style purchase listing surfaced below the core service categories in the captured live app.',
+    description: 'Premium reusable workflows for provider onboarding, support triage, and payout operations.',
     detail:
-      'This mirrors the visible script listing from the Playwright capture. It behaves like a dedicated product card rather than a generator tool.',
-    launchTo: '/transactions',
-    launchLabel: 'View Purchases',
+      'This mirrors the marketplace shape while keeping the product focused on safe Transferly operating templates instead of opaque scripts.',
+    launchTo: '/miniapp/ops',
+    launchLabel: 'Open Template Marketplace',
     accent: { bg: '#14532d', fg: '#f0fdf4', edge: '#166534', glow: 'rgba(20,83,45,0.24)' },
     mark: 'IN'
   }
@@ -396,12 +396,12 @@ export const serviceCatalog = [
 export const serviceGroups = [
   {
     title: 'Featured',
-    description: 'Top-level utility and content surfaces shown first in the live catalog.',
+    description: 'Top-level support, knowledge, and sandbox surfaces shown first in the Transferly catalog.',
     slugs: ['ai-reply', 'articles', 'faker-data']
   },
   {
-    title: 'Bank Slips',
-    description: 'Bank-slip style services with direct, brand-specific launch points.',
+    title: 'Verified Wallets',
+    description: 'Wallet-record workspaces with direct, brand-specific launch points for Transferly support records.',
     slugs: ['opay', 'kuda', 'palmpay']
   },
   {
@@ -410,15 +410,13 @@ export const serviceGroups = [
     slugs: ['paypal', 'stripe', 'wise', 'paystack', 'flutterwave', 'crypto']
   },
   {
-    title: 'Flash Emails',
-    description: 'The largest part of the catalog, with exchange, wallet, and payment-brand email flows.',
+    title: 'Verified Notifications',
+    description: 'Exchange, wallet, and payment-brand notification flows framed as Transferly status updates.',
     slugs: [
       'binance',
       'bybit',
       'coinbase',
-      'paypal',
       'crypto-com',
-      'wise',
       'cash-app',
       'zelle',
       'venmo',
@@ -427,38 +425,38 @@ export const serviceGroups = [
     ]
   },
   {
-    title: 'Crypto Receipts',
-    description: 'Crypto receipt generation is surfaced as its own lane in the captured live app.',
+    title: 'Receipt Vault',
+    description: 'Crypto and provider receipt review is surfaced as its own Transferly operations lane.',
     slugs: ['crypto-receipts']
   },
   {
-    title: 'Support Pages',
-    description: 'Support page tooling keeps a dedicated group instead of being bundled with utilities.',
+    title: 'Support Desk',
+    description: 'Support tooling keeps a dedicated group instead of being bundled with utilities.',
     slugs: ['support-sites']
   },
   {
-    title: 'Password Clone',
-    description: 'Password clone tooling appears as a separate live catalog group.',
+    title: 'Security Center',
+    description: 'Security, audit, and provider-readiness tooling is kept separate from support flows.',
     slugs: ['pass-clone']
   },
   {
-    title: 'Wallet Tracker',
-    description: 'Wallet tracking is presented as its own new service lane.',
+    title: 'Provider Balance Tracker',
+    description: 'Provider balance tracking is presented as its own new service lane.',
     slugs: ['wallet-tracker']
   },
   {
-    title: 'QR Code Generator',
-    description: 'QR generation is a standalone utility group in the live service catalog.',
+    title: 'Payment QR',
+    description: 'QR generation is a standalone payment utility group in the service catalog.',
     slugs: ['qr-code']
   },
   {
-    title: 'Link Shortener',
-    description: 'Link shortening is a standalone utility group in the live service catalog.',
+    title: 'Payment Links',
+    description: 'Link shortening is a standalone checkout and receipt utility group.',
     slugs: ['link-shortener']
   },
   {
-    title: 'Scripts',
-    description: 'Standalone purchasable script listings surfaced below the main service tools.',
+    title: 'Template Marketplace',
+    description: 'Standalone premium workflow templates surfaced below the main service tools.',
     slugs: ['investinnova']
   }
 ];
@@ -474,48 +472,63 @@ export function getServicesByGroup(group) {
 }
 
 const categoryPreviewDefaults = {
-  'Flash Emails': {
-    eyebrow: 'Flash email flow',
-    headline: 'Open a branded mail-style builder with one clean export path.',
+  'Verified Notifications': {
+    eyebrow: 'Verified notification flow',
+    headline: 'Open a branded Transferly notification builder with one clean export path.',
     bullets: ['Provider-focused framing', 'Shared receipt/export engine', 'Fast launch from services grid']
   },
-  'Bank Slips': {
-    eyebrow: 'Bank slip flow',
-    headline: 'Launch a branded transfer-slip workspace with transaction-ready fields.',
-    bullets: ['Bank-specific framing', 'Printable output', 'Point-based generation']
+  'Verified Wallets': {
+    eyebrow: 'Wallet record flow',
+    headline: 'Launch a branded wallet-record workspace with transaction-ready fields.',
+    bullets: ['Wallet-specific framing', 'Downloadable support record', 'Point-based generation']
   },
   Featured: {
     eyebrow: 'Utility flow',
     headline: 'Keep lightweight tools in the same catalog rhythm as the live app.',
     bullets: ['Single-purpose workspace', 'Fast re-entry from dashboard', 'Catalog-first navigation']
   },
-  Scripts: {
-    eyebrow: 'Script listing',
-    headline: 'Treat premium scripts like product listings instead of generic generator cards.',
+  'Template Marketplace': {
+    eyebrow: 'Template listing',
+    headline: 'Treat premium operating templates like product listings instead of generic generator cards.',
     bullets: ['High-value listing', 'Separate purchase context', 'Visible inside the main services board']
+  },
+  'Receipt Vault': {
+    eyebrow: 'Receipt vault',
+    headline: 'Keep provider and crypto receipt evidence searchable from one operator surface.',
+    bullets: ['Settlement context', 'Customer support trail', 'Fast vault re-entry']
+  },
+  'Support Desk': {
+    eyebrow: 'Support desk',
+    headline: 'Route operators into safe support workflows without external page cloning.',
+    bullets: ['Help content', 'Escalation framing', 'Customer-safe messaging']
+  },
+  'Security Center': {
+    eyebrow: 'Security center',
+    headline: 'Review sensitive provider and account posture without collecting credentials.',
+    bullets: ['Audit posture', 'Provider readiness', 'Safe remediation paths']
   }
 };
 
 const servicePreviewOverrides = {
   paypal: {
-    eyebrow: 'PayPal flash mail',
-    headline: 'Route into the PayPal-styled flash-mail builder with a more official, focused entry.',
-    bullets: ['PayPal service framing', 'Launches the email builder', 'Best paired with a points top-up']
+    eyebrow: 'PayPal provider workspace',
+    headline: 'Route into PayPal invoices, payouts, balance review, and notification-ready support flows.',
+    bullets: ['PayPal service framing', 'Provider launcher', 'Best paired with a points top-up']
   },
   opay: {
-    eyebrow: 'Opay bank slip',
-    headline: 'Start from the Opay tile and drop straight into the transfer-slip workflow.',
-    bullets: ['Opay-specific positioning', 'Bank-slip generator underneath', 'Fast output download']
+    eyebrow: 'Opay wallet record',
+    headline: 'Start from the Opay tile and drop straight into the wallet-record workflow.',
+    bullets: ['Opay-specific positioning', 'Receipt studio underneath', 'Fast output download']
   },
   kuda: {
-    eyebrow: 'Kuda bank slip',
-    headline: 'Use a dedicated Kuda entry page before entering the shared bank-slip builder.',
+    eyebrow: 'Kuda wallet record',
+    headline: 'Use a dedicated Kuda entry page before entering the shared wallet-record builder.',
     bullets: ['Kuda-branded click path', 'Shared generation engine', 'Points-based export']
   },
   investinnova: {
-    eyebrow: 'Script purchase',
-    headline: 'Keep premium script offers visually distinct from the tool generators.',
-    bullets: ['High-ticket listing', 'Catalog visibility', 'Purchase-oriented product surface']
+    eyebrow: 'Template marketplace',
+    headline: 'Keep premium workflow templates visually distinct from the tool generators.',
+    bullets: ['High-value listing', 'Catalog visibility', 'Purchase-oriented product surface']
   }
 };
 
@@ -528,15 +541,15 @@ export function getServicePreview(service) {
 }
 
 export function getServiceEstimatedCost(service, config) {
-  if (service.category === 'Bank Slips') {
+  if (service.category === 'Verified Wallets' || service.launchTo?.includes('type=bank')) {
     return Number(config?.bank_slip_cost || 10);
   }
 
-  if (service.category === 'Flash Emails') {
+  if (service.category === 'Verified Notifications' || service.launchTo?.includes('type=email')) {
     return Number(config?.email_receipt_cost || 5);
   }
 
-  if (service.category === 'Scripts') {
+  if (service.category === 'Template Marketplace') {
     return 95000;
   }
 
@@ -571,6 +584,10 @@ export const dashboardPreviewSlugs = [
   'crypto-receipts',
   'paypal',
   'kuda',
+  'support-sites',
+  'pass-clone',
+  'qr-code',
+  'link-shortener',
   'cash-app',
   'zelle',
   'venmo',

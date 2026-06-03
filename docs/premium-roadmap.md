@@ -108,10 +108,74 @@ This roadmap tracks the top-tier features planned for Transferly as a Telegram m
 
 ## Implementation Phases
 
+### SlipCraft-Inspired Safe Marketplace Mapping
+
+This project should mirror the high-density marketplace feel, fast service navigation, and premium command-center polish from SlipCraft-style apps without copying unsafe behavior, credential-capture concepts, fake document language, or web login/register flows. Transferly remains a Telegram mini app launched from the bot.
+
+1. **Flash Emails → Verified Notifications**
+   - Provider-styled notification receipt flows for supported services.
+   - Status: Implemented in the mini app catalog, services pages, receipt studio labels, history/vault copy, and bot menu labels.
+
+2. **Bank Slips → Verified Wallets**
+   - Opay, Kuda, and Palmpay wallet-record generation flows.
+   - Status: Implemented in the mini app catalog, service detail pages, receipt studio labels, admin fee labels, and bot menu labels.
+
+3. **Crypto Receipts → Receipt Vault**
+   - Searchable receipt archive, duplication, preview, export, and support handoff.
+   - Status: Implemented as the Mini App Vault and catalog lane while preserving legacy route slugs for compatibility.
+
+4. **Support Sites → Support Desk**
+   - Guided support workspace with Telegram identity, current screen, order, receipt, and provider context.
+   - Status: Implemented as a mini app support route and service catalog lane.
+
+5. **Password Clone / Pass Clone → Security Center**
+   - Safe security posture, account-linking, audit, export-control, and sensitive-workflow checks.
+   - Status: Implemented as a mini app security route and catalog lane.
+
+6. **Wallet Tracker → Provider Balance Tracker**
+   - Provider balance snapshots and operational readiness monitoring.
+   - Status: Implemented through the provider command center and service catalog lane.
+
+7. **QR Code Generator → Payment QR**
+   - Mobile-first payment QR launch lane connected to Transferly collection workflows.
+   - Status: Implemented as a catalog and marketplace lane that routes into the receipt studio.
+
+8. **Link Shortener → Payment Links**
+   - Short payment-link workflow and activity tracking.
+   - Status: Implemented as a catalog and marketplace lane that routes into activity.
+
+9. **Scripts / Marketplace → Template Marketplace**
+   - Premium workflow templates and reusable operator playbooks.
+   - Status: Implemented as a services marketplace section and mini app marketplace lane.
+
+10. **Faker Data → Sandbox Test Data**
+   - Clearly marked sandbox-only QA and demo data generation.
+   - Status: Implemented as a safe catalog and marketplace lane.
+
+### PayPal-Style Service Command Center Parity
+
+All non-provider services should feel like first-class Transferly workspaces instead of simple catalog links. The PayPal command-center pattern is now mirrored across supported services with service-specific lanes, status badges, launch pages, and sub-pages that route into existing mini app workspaces.
+
+- **Verified Notifications:** custom notification, deposit notification, template library, and receipt vault lanes.
+- **Verified Wallets:** wallet record, support context, wallet activity, and balance readiness lanes.
+- **Support AI:** draft reply, support context, saved replies, and activity review lanes.
+- **Ops And Knowledge:** provider runbooks, support playbooks, activity lessons, and security notes lanes.
+- **Sandbox Test Data:** sandbox payload, studio preview, vault review, and operator training lanes.
+- **Receipt Vault:** vault search, duplicate receipt, support handoff, and activity trail lanes.
+- **Support Desk:** support desk, escalation states, receipt context, and security context lanes.
+- **Security Center:** security center, provider readiness, support safety, and activity audit lanes.
+- **Provider Balance Tracker:** balance overview, provider ops, payout activity, and support handoff lanes.
+- **Payment QR:** QR studio, invoice handoff, vault reference, and QR activity lanes.
+- **Payment Links:** payment links, studio link, provider links, and link support lanes.
+- **Template Marketplace:** template marketplace, provider onboarding, support triage, and payout operations lanes.
+
+Status: Phase 1 implemented in the mini app service detail route using existing Transferly routes and provider-safe wording. Phase 2A implemented Telegram bot inline lane keyboards and lane detail callbacks for service command centers. Phase 2B adds backend-backed command-center summaries, live Mini App lane metrics, and Telegram lane metric overlays. Phase 2C adds authenticated lane-detail action kits with readiness checks, generator prefill context, recent receipt previews, Mini App action panels, and Telegram action/readiness overlays. Phase 2D adds audited service-lane action intents for Mini App launches and Telegram lane callbacks without executing provider-side money movement. Later phases should convert selected recorded intents into reviewed, idempotent backend mutations where appropriate.
+
 1. **Provider-Scoped Operations**
    - Add server-side provider filters for webhook events and payment issues.
    - Keep legacy PayPal records without provider metadata visible in PayPal-scoped views.
    - Update bot provider screens to call provider-scoped API filters.
+   - Status: Implemented for provider-scoped mini app and bot navigation surfaces.
 
 2. **Provider Detail Navigation**
    - Make invoice and payout detail screens return to the provider workspace they came from.
@@ -125,7 +189,7 @@ This roadmap tracks the top-tier features planned for Transferly as a Telegram m
 4. **Webhook Reliability Suite**
    - Add webhook detail pages, replay, ignore, sanitized metadata inspection, and provider health scoring.
    - Add dead-letter recovery workflows.
-   - Status: Phase 4 started with admin webhook detail, replay, ignore, sanitized payload metadata, verification flags, and Mini App operator controls. Dead-letter recovery and provider health scoring remain next.
+   - Status: Implemented with admin webhook detail, replay, ignore, sanitized payload metadata, verification flags, provider health scoring API, dead-letter recovery API, and Mini App operator controls.
 
 5. **Reconciliation Timeline**
    - Add a unified timeline that joins invoices, payouts, webhooks, audit logs, and ledger entries.

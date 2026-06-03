@@ -27,6 +27,8 @@ const {
   buildSubscriptionDurationKeyboard,
   buildUserConfirmKeyboard,
   buildServiceGroupsKeyboard,
+  buildServiceDetailKeyboard,
+  buildServiceLaneKeyboard,
   buildServiceSearchResultsKeyboard,
   buildProviderWorkspaceKeyboard,
   buildPayPalWorkspaceKeyboard,
@@ -47,7 +49,7 @@ const { handlePublicCallback } = require("../callbacks/public");
 const { handleServiceCallback } = require("../callbacks/services");
 const { handlePaymentCallback } = require("../callbacks/payments");
 const { handleUserCallback } = require("../callbacks/users");
-const { searchServices } = require("../utils/serviceCatalog");
+const { searchServices, getServiceLane } = require("../utils/serviceCatalog");
 const { ROLES, STATUS, CAPABILITIES, hasCapability, getActionCapability } = require("../utils/capabilities");
 const { initialSessionState } = require("../utils/sessionState");
 
@@ -81,8 +83,18 @@ test("visible Telegram command menu stays intentionally small", () => {
 
 test("start launcher only exposes visible command entry points", () => {
   const startLabels = labels(buildStartKeyboard(ctx(), { role: ROLES.OWNER, status: STATUS.ACTIVE, isAuthorized: true, isAdmin: true, isOwner: true }));
-  assert.deepEqual(startLabels, ["📋 Menu", "💳 Providers", "🧰 Services", "📚 Help", "🪪 Whoami", "✖️ Cancel Prompt", "🚀 Open Dashboard"]);
-  assert.equal(startLabels.includes("🏦 Bank Slips"), false);
+  assert.deepEqual(startLabels, [
+    "📋 Menu",
+    "💳 Providers",
+    "🧰 Services",
+    "📚 Help",
+    "🪪 Whoami",
+    "✖️ Cancel Prompt",
+    "🚀 Open Dashboard",
+    "🧾 Open Studio",
+    "💰 Open Wallet",
+  ]);
+  assert.equal(startLabels.includes("🏦 Wallet Records"), false);
   assert.equal(startLabels.includes("📄 Invoices"), false);
   assert.equal(startLabels.includes("👥 Users"), false);
 });
@@ -91,21 +103,21 @@ test("mini app launch URLs target section routes and start params", () => {
   assert.equal(buildMiniAppUrl("home"), "https://mini.transferly.test/miniapp?startapp=home");
   assert.equal(buildMiniAppUrl("dashboard"), "https://mini.transferly.test/miniapp?startapp=dashboard");
   assert.equal(buildMiniAppUrl("invoices"), "https://mini.transferly.test/miniapp/invoices?startapp=invoices");
-  assert.equal(buildMiniAppUrl("generate"), "https://mini.transferly.test/miniapp/invoices?startapp=generate");
-  assert.equal(buildMiniAppUrl("history"), "https://mini.transferly.test/miniapp/activity?startapp=history");
+  assert.equal(buildMiniAppUrl("generate"), "https://mini.transferly.test/miniapp/studio?startapp=generate");
+  assert.equal(buildMiniAppUrl("history"), "https://mini.transferly.test/miniapp/vault?startapp=history");
   assert.equal(buildMiniAppUrl("wallet"), "https://mini.transferly.test/miniapp/wallet?startapp=wallet");
 });
 
 test("main menu is role-aware", () => {
   const guestLabels = labels(buildMainMenuKeyboard(ctx(), { role: ROLES.GUEST, isAuthorized: false }));
   assert.deepEqual(guestLabels.slice(0, 2), ["🪪 Whoami", "📚 Help"]);
-  assert.equal(guestLabels.includes("🏦 Bank Slips"), false);
+  assert.equal(guestLabels.includes("🏦 Wallet Records"), false);
 
   const userLabels = labels(buildMainMenuKeyboard(ctx(), { role: ROLES.USER, status: STATUS.ACTIVE, isAuthorized: true, isAdmin: false }));
   assert.ok(userLabels.includes("💳 Providers"));
   assert.ok(userLabels.includes("🧰 Services"));
   assert.equal(userLabels.includes("📊 Activity"), false);
-  assert.ok(userLabels.includes("🏦 Bank Slips"));
+  assert.ok(userLabels.includes("🏦 Wallet Records"));
   assert.ok(userLabels.includes("🧾 Receipts"));
   assert.equal(userLabels.includes("📄 Invoices"), false);
   assert.equal(userLabels.includes("💸 Payouts"), false);
@@ -147,9 +159,29 @@ test("service catalog exposes search from services screen", () => {
   assert.ok(resultLabels.includes("🔎 Search Again"));
 });
 
+test("service command centers expose Telegram lanes and mini app actions", () => {
+  const service = searchServices("opay")[0];
+  const lane = getServiceLane(service, "wallet-record");
+  assert.equal(lane.label, "Wallet Record");
+
+  const detailKeyboard = buildServiceDetailKeyboard(ctx(), service);
+  const detailLabels = labels(detailKeyboard);
+  assert.ok(detailLabels.includes("✅ Wallet Record"));
+  assert.ok(detailLabels.includes("✅ Support Context"));
+  assert.ok(detailLabels.includes("🚀 Open Service Workspace"));
+  assert.ok(callbackActions(detailKeyboard).includes("SERVICE_LANE:opay:wallet-record"));
+
+  const laneKeyboard = buildServiceLaneKeyboard(ctx(), service, lane);
+  assert.ok(labels(laneKeyboard).includes("🚀 Start Lane"));
+  assert.ok(labels(laneKeyboard).includes("✍️ Custom Details"));
+  assert.ok(labels(laneKeyboard).includes("🚀 Open Wallet Record"));
+  assert.ok(callbackActions(laneKeyboard).includes("SERVICE_ACTION:opay:wallet-record"));
+  assert.ok(callbackActions(laneKeyboard).includes("SERVICE:opay"));
+});
+
 test("PayPal workspace exposes invoice and payout search", () => {
   const userLabels = labels(buildPayPalWorkspaceKeyboard(ctx(), { role: ROLES.USER, status: STATUS.ACTIVE, isAuthorized: true }));
-  assert.ok(userLabels.includes("✉️ Flash Email"));
+  assert.ok(userLabels.includes("✉️ Notification"));
   assert.equal(userLabels.includes("🔎 Search Invoice"), false);
   assert.equal(userLabels.includes("🔎 Search Payout"), false);
 
@@ -215,6 +247,8 @@ test("capabilities allow authorized users to use services but block payment ops"
   assert.equal(hasCapability({ role: ROLES.USER, status: STATUS.ACTIVE, subscriptionExpired: true }, CAPABILITIES.SERVICES_USE), false);
   assert.equal(hasCapability(guest, CAPABILITIES.SERVICES_USE), false);
   assert.equal(getActionCapability("GROUP:BANK"), CAPABILITIES.SERVICES_USE);
+  assert.equal(getActionCapability("SERVICE_ACTION:opay:wallet-record"), CAPABILITIES.SERVICES_USE);
+  assert.equal(getActionCapability("SERVICE_LANE:opay:wallet-record"), CAPABILITIES.SERVICES_USE);
   assert.equal(getActionCapability("PROVIDERS"), CAPABILITIES.SERVICES_USE);
   assert.equal(getActionCapability("ACTIVITY"), CAPABILITIES.PAYMENTS_READ);
   assert.equal(getActionCapability("SECURITY"), CAPABILITIES.SYSTEM_STATUS);
@@ -266,6 +300,8 @@ test("owner user-management keyboards include duration presets and confirmation 
 test("all generated inline callback actions have router coverage", async () => {
   const service = searchServices("paypal")[0];
   const stripeService = searchServices("stripe")[0];
+  const walletService = searchServices("opay")[0];
+  const walletLane = getServiceLane(walletService, "wallet-record");
   const invoiceList = buildPayPalListKeyboard(
     ctx(),
     "invoice",
@@ -288,6 +324,8 @@ test("all generated inline callback actions have router coverage", async () => {
     ...callbackActions(buildProvidersKeyboard(ctx(), { role: ROLES.OWNER, status: STATUS.ACTIVE, isAuthorized: true, isAdmin: true, isOwner: true })),
     ...callbackActions(buildServiceGroupsKeyboard(ctx())),
     ...callbackActions(buildServiceSearchResultsKeyboard(ctx(), [service])),
+    ...callbackActions(buildServiceDetailKeyboard(ctx(), walletService)),
+    ...callbackActions(buildServiceLaneKeyboard(ctx(), walletService, walletLane)),
     ...callbackActions(buildPayPalWorkspaceKeyboard(ctx(), { role: ROLES.ADMIN, status: STATUS.ACTIVE, isAuthorized: true, isAdmin: true })),
     ...callbackActions(buildProviderWorkspaceKeyboard(ctx(), stripeService, { role: ROLES.OWNER, status: STATUS.ACTIVE, isAuthorized: true, isAdmin: true, isOwner: true })),
     ...callbackActions(invoiceList),
@@ -375,7 +413,7 @@ test("stale callback recovery opens the closest fresh workspace", () => {
   const owner = { role: ROLES.OWNER, status: STATUS.ACTIVE, isAuthorized: true, isAdmin: true, isOwner: true };
   assert.ok(labels(buildCallbackRecoveryKeyboard(ctx(), "USER_D:123", owner)).includes("📋 List Users"));
   assert.ok(labels(buildCallbackRecoveryKeyboard(ctx(), "PP:INV_D:inv_1", owner)).includes("📄 Official Invoices"));
-  assert.ok(labels(buildCallbackRecoveryKeyboard(ctx(), "SERVICE:paypal", owner)).includes("Bank Slips"));
+  assert.ok(labels(buildCallbackRecoveryKeyboard(ctx(), "SERVICE:paypal", owner)).includes("Verified Wallets"));
 });
 
 test("payment duplicate guards block unsafe repeated actions", () => {

@@ -1,0 +1,266 @@
+- generic [ref=e6]:
+  - banner [ref=e7]:
+    - generic [ref=e8]:
+      - button "Close Mini App" [ref=e9] [cursor=pointer]:
+        - img [ref=e10]
+      - generic [ref=e12]:
+        - paragraph [ref=e13]: Telegram-native workspace
+        - heading "Command Center" [level=1] [ref=e14]
+      - generic [ref=e15]:
+        - link "Support" [ref=e16] [cursor=pointer]:
+          - /url: /miniapp/support?from=home
+          - img [ref=e17]
+        - link "Settings" [ref=e24] [cursor=pointer]:
+          - /url: /miniapp/settings?from=home
+          - img [ref=e25]
+        - link "Profile" [ref=e28] [cursor=pointer]:
+          - /url: /miniapp/profile
+          - img [ref=e29]
+    - generic [ref=e32]:
+      - generic [ref=e33]:
+        - generic [ref=e34]:
+          - img [ref=e35]
+          - text: Telegram session detected
+        - paragraph [ref=e38]: Transferly user
+      - generic [ref=e39]:
+        - generic [ref=e40]:
+          - img [ref=e41]
+          - text: Points
+        - paragraph [ref=e44]: "0"
+    - generic [ref=e45]:
+      - link "Studio" [ref=e46] [cursor=pointer]:
+        - /url: /miniapp/studio
+        - img [ref=e47]
+        - text: Studio
+      - link "Vault" [ref=e49] [cursor=pointer]:
+        - /url: /miniapp/vault
+        - img [ref=e50]
+        - text: Vault
+      - link "Activity" [ref=e53] [cursor=pointer]:
+        - /url: /miniapp/activity
+        - img [ref=e54]
+        - text: Activity
+      - link "Analytics" [ref=e56] [cursor=pointer]:
+        - /url: /miniapp/analytics
+        - img [ref=e57]
+        - text: Analytics
+      - link "Alerts" [ref=e59] [cursor=pointer]:
+        - /url: /miniapp/notifications
+        - img [ref=e60]
+        - text: Alerts
+      - link "Clients" [ref=e63] [cursor=pointer]:
+        - /url: /miniapp/clients
+        - img [ref=e64]
+        - text: Clients
+      - link "Security" [ref=e67] [cursor=pointer]:
+        - /url: /miniapp/security
+        - img [ref=e68]
+        - text: Security
+  - main [ref=e71]:
+    - generic [ref=e72]:
+      - generic [ref=e77]:
+        - generic [ref=e78]:
+          - img [ref=e79]
+          - text: Premium Mini App
+        - heading "Build receipts, manage points, and operate from Telegram." [level=2] [ref=e81]
+        - paragraph [ref=e82]: Operator, this is the Telegram-native workspace for fast generation, wallet visibility, history, support, and operator flows.
+        - generic [ref=e83]:
+          - generic [ref=e84]
+          - generic [ref=e91]
+          - generic [ref=e97]
+      - generic [ref=e103]:
+        - generic [ref=e104]:
+          - generic [ref=e105]
+          - link "Open service catalog" [ref=e108] [cursor=pointer]:
+            - /url: /services
+        - generic [ref=e112]:
+          - link "CR Receipt Vault Receipt Vault" [ref=e113] [cursor=pointer]:
+            - /url: /miniapp/studio
+          - link "PP PayPal Payment Providers" [ref=e118] [cursor=pointer]:
+            - /url: /miniapp/studio
+          - link "KU Kuda Verified Wallets" [ref=e123] [cursor=pointer]:
+            - /url: /miniapp/studio
+          - link "SS Support Desk Support Desk" [ref=e128] [cursor=pointer]:
+            - /url: /miniapp/studio
+          - link "PC Security Center Security Center" [ref=e133] [cursor=pointer]:
+            - /url: /miniapp/studio
+          - link "QR Payment QR Payment QR" [ref=e138] [cursor=pointer]:
+            - /url: /miniapp/studio
+          - link "LS Payment Link Shortener Payment Links" [ref=e143] [cursor=pointer]:
+            - /url: /miniapp/studio
+          - link "CA Cash App Verified Notifications" [ref=e148] [cursor=pointer]:
+            - /url: /miniapp/studio
+          - link "ZE Zelle Verified Notifications" [ref=e153] [cursor=pointer]:
+            - /url: /miniapp/studio
+          - link "VE Venmo Verified Notifications" [ref=e158] [cursor=pointer]:
+            - /url: /miniapp/studio
+          - link "CR Receipt Vault Receipt Vault" [ref=e163] [cursor=pointer]:
+            - /url: /miniapp/studio
+          - link "PP PayPal Payment Providers" [ref=e168] [cursor=pointer]:
+            - /url: /miniapp/studio
+          - link "KU Kuda Verified Wallets" [ref=e173] [cursor=pointer]:
+            - /url: /miniapp/studio
+          - link "SS Support Desk Support Desk" [ref=e178] [cursor=pointer]:
+            - /url: /miniapp/studio
+          - link "PC Security Center Security Center" [ref=e183] [cursor=pointer]:
+            - /url: /miniapp/studio
+          - link "QR Payment QR Payment QR" [ref=e188] [cursor=pointer]:
+            - /url: /miniapp/studio
+          - link "LS Payment Link Shortener Payment Links" [ref=e193] [cursor=pointer]:
+            - /url: /miniapp/studio
+          - link "CA Cash App Verified Notifications" [ref=e198] [cursor=pointer]:
+            - /url: /miniapp/studio
+          - link "ZE Zelle Verified Notifications" [ref=e203] [cursor=pointer]:
+            - /url: /miniapp/studio
+          - link "VE Venmo Verified Notifications" [ref=e208] [cursor=pointer]:
+            - /url: /miniapp/studio
+      - generic [ref=e213]:
+        - generic [ref=e214]:
+          - img [ref=e215]
+          - text: Bot-first access
+        - generic [ref=e218]:
+          - generic [ref=e219]
+          - generic [ref=e228]
+          - generic [ref=e236]
+      - generic [ref=e246]:
+        - generic [ref=e247]:
+          - generic [ref=e248]
+          - link "Open" [ref=e251] [cursor=pointer]:
+            - /url: /miniapp/ops
+        - generic [ref=e254]:
+          - link "PP Live PayPal Payment Providers" [ref=e255] [cursor=pointer]:
+            - /url: /miniapp/ops
+          - link "ST Adapter Stripe Connect Payment Providers" [ref=e261] [cursor=pointer]:
+            - /url: /miniapp/ops
+          - link "PS Adapter Paystack Payment Providers" [ref=e267] [cursor=pointer]:
+            - /url: /miniapp/ops
+          - link "FL Adapter Flutterwave Payment Providers" [ref=e273] [cursor=pointer]:
+            - /url: /miniapp/ops
+          - link "CR Adapter Crypto Commerce Payment Providers" [ref=e279] [cursor=pointer]:
+            - /url: /miniapp/ops
+          - link "WI Live Wise Payment Providers" [ref=e285] [cursor=pointer]:
+            - /url: /miniapp/ops
+      - generic [ref=e291]:
+        - generic [ref=e292]:
+          - generic [ref=e293]
+          - link "Open full marketplace" [ref=e296] [cursor=pointer]:
+            - /url: /services
+        - generic [ref=e299]:
+          - link "Records Verified Wallets Opay, Kuda, and Palmpay wallet-record flows with guided detail capture and point-aware generation. Open" [ref=e300] [cursor=pointer]:
+            - /url: /miniapp/studio
+          - link "Receipts Verified Notifications Provider-styled notification receipts for PayPal, Binance, Bybit, Coinbase, Cash App, Zelle, Venmo, Trust Wallet, and GCash. Open" [ref=e313] [cursor=pointer]:
+            - /url: /miniapp/studio
+          - link "Archive Receipt Vault Search, duplicate, preview, export, and hand off generated receipts with support-ready context. Open" [ref=e325] [cursor=pointer]:
+            - /url: /miniapp/vault
+          - link "Handoff Support Desk Launch guided help with current screen, Telegram identity, order, receipt, and provider context attached. Open" [ref=e338] [cursor=pointer]:
+            - /url: /miniapp/support
+          - link "Safe Security Center Review session posture, account linking, export controls, audit posture, and sensitive workflow checks. Open" [ref=e354] [cursor=pointer]:
+            - /url: /miniapp/security
+          - link "Ops Provider Command Monitor readiness, balances, webhook health, issue triage, invoices, and payouts for supported rails. Open" [ref=e367] [cursor=pointer]:
+            - /url: /miniapp/ops
+          - link "Collect Payment QR Prepare mobile-first payment QR and studio launch flows for fast customer collection workflows. Open" [ref=e379] [cursor=pointer]:
+            - /url: /miniapp/studio
+          - link "Links Payment Links Track payment-link activity and shorten customer-facing flows from the unified activity timeline. Open" [ref=e390] [cursor=pointer]:
+            - /url: /miniapp/activity
+          - link "Premium Template Marketplace Surface premium workflow templates and reusable operator playbooks for repeatable service delivery. Open" [ref=e402] [cursor=pointer]:
+            - /url: /services
+          - link "Sandbox Sandbox Test Data Generate clearly marked sandbox data for demos, QA, support rehearsals, and safe operator training. Open" [ref=e413] [cursor=pointer]:
+            - /url: /services/faker-data
+      - generic [ref=e425]:
+        - link "Revenue Invoice center Create invoices, send reminders, monitor states, and inspect timeline evidence. Open" [ref=e426] [cursor=pointer]:
+          - /url: /miniapp/invoices
+          - generic [ref=e427]
+          - heading "Invoice center" [level=3] [ref=e433]
+          - paragraph [ref=e434]: Create invoices, send reminders, monitor states, and inspect timeline evidence.
+          - generic [ref=e435]
+        - link "Funds Payout center Submit, refresh, and review payout releases from a mobile-first operations desk. Open" [ref=e438] [cursor=pointer]:
+          - /url: /miniapp/payouts
+          - generic [ref=e439]
+          - heading "Payout center" [level=3] [ref=e445]
+          - paragraph [ref=e446]: Submit, refresh, and review payout releases from a mobile-first operations desk.
+          - generic [ref=e447]
+        - link "Live Analytics Track inflow, outflow, receipts, wallet funding, and operational velocity. Open" [ref=e450] [cursor=pointer]:
+          - /url: /miniapp/analytics
+          - generic [ref=e451]
+          - heading "Analytics" [level=3] [ref=e456]
+          - paragraph [ref=e457]: Track inflow, outflow, receipts, wallet funding, and operational velocity.
+          - generic [ref=e458]
+        - link "Timeline Activity feed Scan invoices, payouts, funding, receipts, and issues in one chronological view. Open" [ref=e461] [cursor=pointer]:
+          - /url: /miniapp/activity
+          - generic [ref=e462]
+          - heading "Activity feed" [level=3] [ref=e467]
+          - paragraph [ref=e468]: Scan invoices, payouts, funding, receipts, and issues in one chronological view.
+          - generic [ref=e469]
+        - link "Fast Generate receipt Launch the polished studio with live preview, service presets, and export actions. Open" [ref=e472] [cursor=pointer]:
+          - /url: /miniapp/studio
+          - generic [ref=e473]
+          - heading "Generate receipt" [level=3] [ref=e478]
+          - paragraph [ref=e479]: Launch the polished studio with live preview, service presets, and export actions.
+          - generic [ref=e480]
+        - link "Wallet Top up points Create a funding order, track status, and keep the support handoff visible. Open" [ref=e483] [cursor=pointer]:
+          - /url: /miniapp/wallet
+          - generic [ref=e484]
+          - heading "Top up points" [level=3] [ref=e491]
+          - paragraph [ref=e492]: Create a funding order, track status, and keep the support handoff visible.
+          - generic [ref=e493]
+        - link "History Open vault Search history, duplicate receipts, preview, export, and share from one place. Open" [ref=e496] [cursor=pointer]:
+          - /url: /miniapp/vault
+          - generic [ref=e497]
+          - heading "Open vault" [level=3] [ref=e504]
+          - paragraph [ref=e505]: Search history, duplicate receipts, preview, export, and share from one place.
+          - generic [ref=e506]
+        - link "Alerts Notifications Review urgent approvals, delayed funding, webhook alerts, and support follow-ups. Open" [ref=e509] [cursor=pointer]:
+          - /url: /miniapp/notifications
+          - generic [ref=e510]
+          - heading "Notifications" [level=3] [ref=e516]
+          - paragraph [ref=e517]: Review urgent approvals, delayed funding, webhook alerts, and support follow-ups.
+          - generic [ref=e518]
+        - link "CRM Client intelligence See recipient value, latest invoices, engagement signals, and next best actions. Open" [ref=e521] [cursor=pointer]:
+          - /url: /miniapp/clients
+          - generic [ref=e522]
+          - heading "Client intelligence" [level=3] [ref=e528]
+          - paragraph [ref=e529]: See recipient value, latest invoices, engagement signals, and next best actions.
+          - generic [ref=e530]
+        - link "Safe Security posture Audit Telegram session state, account linking, export controls, and safety posture. Open" [ref=e533] [cursor=pointer]:
+          - /url: /miniapp/security
+          - generic [ref=e534]
+          - heading "Security posture" [level=3] [ref=e540]
+          - paragraph [ref=e541]: Audit Telegram session state, account linking, export controls, and safety posture.
+          - generic [ref=e542]
+        - link "Admin Provider command Admin-only provider readiness, balances, webhook health, issues, invoices, and payouts. Open" [ref=e545] [cursor=pointer]:
+          - /url: /miniapp/ops
+          - generic [ref=e546]
+          - heading "Provider command" [level=3] [ref=e552]
+          - paragraph [ref=e553]: Admin-only provider readiness, balances, webhook health, issues, invoices, and payouts.
+          - generic [ref=e554]
+        - link "Admin Risk command Admin-only exception queue for blocked payouts, disputes, and sensitive events. Open" [ref=e557] [cursor=pointer]:
+          - /url: /miniapp/risk
+          - generic [ref=e558]
+          - heading "Risk command" [level=3] [ref=e565]
+          - paragraph [ref=e566]: Admin-only exception queue for blocked payouts, disputes, and sensitive events.
+          - generic [ref=e567]
+  - navigation [ref=e570]:
+    - generic [ref=e571]:
+      - link "Home" [ref=e572] [cursor=pointer]:
+        - /url: /miniapp
+        - img [ref=e573]
+        - generic [ref=e576]: Home
+      - link "Invoice" [ref=e577] [cursor=pointer]:
+        - /url: /miniapp/invoices
+        - img [ref=e578]
+        - generic [ref=e581]: Invoice
+      - link "Payout" [ref=e582] [cursor=pointer]:
+        - /url: /miniapp/payouts
+        - img [ref=e583]
+        - generic [ref=e586]: Payout
+      - link "Wallet" [ref=e587] [cursor=pointer]:
+        - /url: /miniapp/wallet
+        - img [ref=e588]
+        - generic [ref=e592]: Wallet
+      - link "Ops" [ref=e593] [cursor=pointer]:
+        - /url: /miniapp/ops
+        - img [ref=e594]
+        - generic [ref=e597]: Ops
+  - link "Open full web history" [ref=e598] [cursor=pointer]:
+    - /url: /transactions
+    - img [ref=e599]

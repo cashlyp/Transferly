@@ -129,7 +129,7 @@ export default function ReferralPage() {
               <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Payout loop</p>
               <h2 className="mt-2 text-2xl font-black tracking-[-0.04em] text-slate-950">Turn referrals into tool usage quickly.</h2>
               <p className="mt-3 text-sm leading-7 text-slate-600">
-                Your referral rewards go straight into your points wallet, so your next bank slip or flash mail can be generated without waiting for a manual top-up.
+                Your referral rewards go straight into your points wallet, so your next wallet record or notification can be generated without waiting for a manual top-up.
               </p>
               <Link
                 to="/buy-point"

@@ -60,6 +60,7 @@ removeSqliteArtifacts(sqlitePath);
 const { createApp } = require('../app');
 const { bootstrapService } = require('../services/bootstrapService');
 const { close, db, initializeDatabase, loadSchemaSql } = require('../db');
+const { auditLogRepository } = require('../repositories/auditLogRepository');
 const { faqRepository } = require('../repositories/faqRepository');
 const { invoiceRepository } = require('../repositories/invoiceRepository');
 const { invoiceTemplateRepository } = require('../repositories/invoiceTemplateRepository');
@@ -77,6 +78,7 @@ const { opsService } = require('../services/opsService');
 const originalFetch = global.fetch;
 const originalGetQueueOverview = opsService.getQueueOverview;
 const originalListDeadLetterJobs = opsService.listDeadLetterJobs;
+const originalRecoverDeadLetterJob = opsService.recoverDeadLetterJob;
 let app;
 let invoiceSequence = 0;
 let stripeInvoiceSequence = 0;
@@ -901,6 +903,7 @@ before(async () => {
 beforeEach(async () => {
   opsService.getQueueOverview = originalGetQueueOverview;
   opsService.listDeadLetterJobs = originalListDeadLetterJobs;
+  opsService.recoverDeadLetterJob = originalRecoverDeadLetterJob;
   await resetDatabase();
   invoiceSequence = 0;
   stripeInvoiceSequence = 0;
@@ -925,6 +928,7 @@ after(async () => {
   global.fetch = originalFetch;
   opsService.getQueueOverview = originalGetQueueOverview;
   opsService.listDeadLetterJobs = originalListDeadLetterJobs;
+  opsService.recoverDeadLetterJob = originalRecoverDeadLetterJob;
   await close();
   removeSqliteArtifacts(sqlitePath);
 });
@@ -1060,6 +1064,131 @@ describe('API integration flows', () => {
 
     assert.equal(adminSessionResponse.status, 200);
     assert.equal(adminSessionResponse.json().user.id, 'demo-user');
+  });
+
+  test('GET /api/services/:slug/command-center requires user auth and returns service lane metrics', async () => {
+    const unauthorizedResponse = await injectRequest(app, {
+      method: 'GET',
+      url: '/api/services/opay/command-center'
+    });
+
+    assert.equal(unauthorizedResponse.status, 401);
+    assert.equal(unauthorizedResponse.json().code, 'USER_AUTH_REQUIRED');
+
+    await receiptRepository.create({
+      userId: 'demo-user',
+      type: 'bank',
+      status: 'generated',
+      title: 'Opay wallet record',
+      summary: { text: 'Opay wallet record ready' },
+      data: { details: { service: 'opay', amount: '100.00' } },
+      pdfBase64: '',
+      imageDataUrl: 'data:image/png;base64,test',
+      costPoints: 10
+    });
+
+    await receiptRepository.create({
+      userId: 'demo-user',
+      type: 'email',
+      status: 'generated',
+      title: 'Binance notice',
+      summary: { text: 'Binance notification ready' },
+      data: { details: { service: 'binance' } },
+      pdfBase64: '',
+      imageDataUrl: 'data:image/png;base64,test',
+      costPoints: 10
+    });
+
+    const response = await injectRequest(app, {
+      method: 'GET',
+      url: '/api/services/opay/command-center',
+      headers: bearerHeaders(userTokens.demoUser)
+    });
+
+    assert.equal(response.status, 200);
+    const body = response.json();
+    assert.equal(body.service.slug, 'opay');
+    assert.equal(body.service.payment_provider, false);
+    assert.equal(body.activity.service_receipt_count, 1);
+    assert.equal(body.activity.compatible_receipt_count, 1);
+    assert.equal(body.wallet.available_balance_cents, 250000);
+    assert.ok(body.command_center.live_metrics.some((metric) => metric.id === 'wallet'));
+    const walletLane = body.command_center.lanes.find((lane) => lane.id === 'wallet-record');
+    assert.ok(walletLane);
+    assert.ok(walletLane.live_metrics.length >= 1);
+
+    const laneResponse = await injectRequest(app, {
+      method: 'GET',
+      url: '/api/services/opay/lanes/wallet-record',
+      headers: bearerHeaders(userTokens.demoUser)
+    });
+
+    assert.equal(laneResponse.status, 200);
+    const laneBody = laneResponse.json();
+    assert.equal(laneBody.service.slug, 'opay');
+    assert.equal(laneBody.lane.id, 'wallet-record');
+    assert.equal(laneBody.action.kind, 'generate');
+    assert.equal(laneBody.action.route, '/dashboard/generate?type=bank&service=opay');
+    assert.equal(laneBody.prefill.receipt_type, 'bank');
+    assert.equal(laneBody.prefill.service_slug, 'opay');
+    assert.ok(laneBody.readiness.some((check) => check.id === 'points' && check.status === 'ready'));
+    assert.equal(laneBody.activity.service_receipt_count, 1);
+    assert.equal(laneBody.activity.recent_receipts[0].title, 'Opay wallet record');
+    assert.ok(Number(laneBody.support_context.points_available) > 0);
+
+    const actionPayload = JSON.stringify({
+      source: 'miniapp',
+      intent: 'launch',
+      metadata: { entry: 'lane-detail' }
+    });
+    const actionResponse = await injectRequest(app, {
+      method: 'POST',
+      url: '/api/services/opay/lanes/wallet-record/actions',
+      headers: jsonHeaders(actionPayload, bearerHeaders(userTokens.demoUser)),
+      body: actionPayload
+    });
+
+    assert.equal(actionResponse.status, 201);
+    const actionBody = actionResponse.json();
+    assert.equal(actionBody.action_intent.status, 'recorded');
+    assert.equal(actionBody.action_intent.service_slug, 'opay');
+    assert.equal(actionBody.action_intent.lane_id, 'wallet-record');
+    assert.equal(actionBody.action_intent.intent, 'launch');
+    assert.equal(actionBody.action_intent.source, 'miniapp');
+    assert.equal(actionBody.action_intent.action.kind, 'generate');
+    assert.equal(actionBody.action_intent.action.route, '/dashboard/generate?type=bank&service=opay');
+    assert.equal(actionBody.action_intent.prefill.service_slug, 'opay');
+    assert.equal(actionBody.action_intent.audit.entity_type, 'service_lane');
+
+    const auditEntries = await auditLogRepository.findManyForEntity('service_lane', 'opay:wallet-record');
+    assert.ok(
+      auditEntries.some(
+        (entry) =>
+          entry.action === 'service_lane.action_intent_recorded' &&
+          entry.actorId === 'demo-user' &&
+          entry.metadata.action_intent_id === actionBody.action_intent.id &&
+          entry.metadata.source === 'miniapp' &&
+          entry.metadata.metadata.entry === 'lane-detail'
+      )
+    );
+
+    const missingLaneResponse = await injectRequest(app, {
+      method: 'GET',
+      url: '/api/services/opay/lanes/not-real',
+      headers: bearerHeaders(userTokens.demoUser)
+    });
+
+    assert.equal(missingLaneResponse.status, 404);
+    assert.equal(missingLaneResponse.json().code, 'SERVICE_LANE_NOT_FOUND');
+
+    const missingResponse = await injectRequest(app, {
+      method: 'GET',
+      url: '/api/services/missing-service/command-center',
+      headers: bearerHeaders(userTokens.demoUser)
+    });
+
+    assert.equal(missingResponse.status, 404);
+    assert.equal(missingResponse.json().code, 'SERVICE_NOT_FOUND');
   });
 
   test('top-up order endpoints persist user funding orders and require admin completion for point credit', async () => {
@@ -1736,6 +1865,57 @@ describe('API integration flows', () => {
       }
     });
     assert.equal(body.balance.pending[0].amount, '250.00');
+  });
+
+  test('GET /api/admin/payment-providers/health scores provider operations from issues and webhooks', async () => {
+    await webhookEventRepository.create({
+      eventId: 'stripe:evt_provider_health_failed_1',
+      eventType: 'charge.failed',
+      resourceType: 'charge',
+      transmissionId: 'stripe-health-transmission-1',
+      status: 'FAILED',
+      payload: {
+        provider: 'stripe',
+        type: 'charge.failed',
+        data: {
+          object: {
+            id: 'ch_failed_health_1'
+          }
+        }
+      },
+      verificationPayload: {
+        stripe_signature_present: true
+      },
+      processingAttempts: 2,
+      lastError: 'Signature verification failed'
+    });
+    await paymentOpsIssueRepository.upsert({
+      entityType: 'webhook',
+      entityId: 'stripe:evt_provider_health_failed_1',
+      issueType: 'WEBHOOK_PROCESSING_FAILED',
+      severity: 'HIGH',
+      status: 'OPEN',
+      summary: 'Stripe webhook processing failed and needs replay.',
+      metadata: {
+        provider: 'stripe'
+      }
+    });
+
+    const response = await injectRequest(app, {
+      method: 'GET',
+      url: '/api/admin/payment-providers/health',
+      headers: bearerHeaders(adminToken)
+    });
+
+    assert.equal(response.status, 200);
+    const body = response.json();
+    const stripe = body.data.find((provider) => provider.provider === 'stripe');
+    assert.ok(stripe);
+    assert.ok(stripe.score < 100);
+    assert.equal(stripe.failed_webhooks, 1);
+    assert.equal(stripe.unresolved_issues, 1);
+    assert.ok(stripe.reasons.some((reason) => reason.includes('webhook')));
+    assert.ok(stripe.next_actions.some((action) => action.includes('webhook')));
   });
 
   test('admin can create, onboard, refresh, and webhook-sync a Stripe connected account', async () => {
@@ -4055,8 +4235,12 @@ describe('API integration flows', () => {
         attempts_made: 5,
         failed_reason: 'Provider timeout',
         queue_name: 'dead-letter',
+        source_queue: 'payout-process',
+        source_job_id: 'payout-job-1',
+        recovery: null,
         data: {
-          queueName: 'payout-process',
+          sourceQueue: 'payout-process',
+          sourceJobId: 'payout-job-1',
           payload: {
             payoutId: 'payout-1'
           }
@@ -4065,6 +4249,42 @@ describe('API integration flows', () => {
         finished_at: '2026-05-05T00:01:00.000Z'
       }
     ];
+    opsService.recoverDeadLetterJob = async (jobId, input) => ({
+      dead_letter: {
+        job_id: jobId,
+        name: 'payout-process-dead-letter',
+        attempts_made: 5,
+        failed_reason: 'Provider timeout',
+        queue_name: 'dead-letter',
+        source_queue: 'payout-process',
+        source_job_id: 'payout-job-1',
+        recovery: {
+          recoveredAt: '2026-05-05T00:02:00.000Z',
+          recoveredByActorId: input.adminActorId,
+          note: input.note,
+          recoveryJobId: 'recovered-job-1',
+          recoveryJobName: 'process-approved-payout',
+          sourceQueue: 'payout-process'
+        },
+        data: {
+          sourceQueue: 'payout-process',
+          sourceJobId: 'payout-job-1',
+          payload: {
+            payoutId: 'payout-1'
+          }
+        },
+        created_at: '2026-05-05T00:00:00.000Z',
+        finished_at: '2026-05-05T00:01:00.000Z'
+      },
+      recovery: {
+        recovered_at: '2026-05-05T00:02:00.000Z',
+        recovered_by_actor_id: input.adminActorId,
+        note: input.note,
+        source_queue: 'payout-process',
+        recovery_job_id: 'recovered-job-1',
+        recovery_job_name: 'process-approved-payout'
+      }
+    });
 
     const queueResponse = await injectRequest(app, {
       method: 'GET',
@@ -4090,9 +4310,26 @@ describe('API integration flows', () => {
     assert.equal(deadLetterBody.data.length, 1);
     assert.equal(deadLetterBody.data[0].job_id, '17');
     assert.equal(deadLetterBody.data[0].queue_name, 'dead-letter');
+    assert.equal(deadLetterBody.data[0].source_queue, 'payout-process');
+
+    const recoveryPayload = JSON.stringify({ note: 'retry after provider incident' });
+    const recoveryResponse = await injectRequest(app, {
+      method: 'POST',
+      url: '/api/admin/dead-letters/17/recover',
+      headers: jsonHeaders(recoveryPayload, bearerHeaders(adminToken)),
+      body: recoveryPayload
+    });
+
+    assert.equal(recoveryResponse.status, 200);
+    const recoveryBody = recoveryResponse.json();
+    assert.equal(recoveryBody.dead_letter.job_id, '17');
+    assert.equal(recoveryBody.recovery.source_queue, 'payout-process');
+    assert.equal(recoveryBody.recovery.recovery_job_name, 'process-approved-payout');
+    assert.equal(recoveryBody.recovery.note, 'retry after provider incident');
 
     opsService.getQueueOverview = originalGetQueueOverview;
     opsService.listDeadLetterJobs = originalListDeadLetterJobs;
+    opsService.recoverDeadLetterJob = originalRecoverDeadLetterJob;
   });
 
   test('admin reconciliation trigger refreshes reconcilable invoice state through official PayPal sync', async () => {

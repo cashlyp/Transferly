@@ -56,6 +56,9 @@ describe('opsService', () => {
       attempts_made: 5,
       failed_reason: 'Provider timeout',
       queue_name: 'dead-letter',
+      source_queue: 'payout-process',
+      source_job_id: null,
+      recovery: null,
       data: {
         queueName: 'payout-process',
         payload: {

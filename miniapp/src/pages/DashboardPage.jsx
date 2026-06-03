@@ -23,16 +23,16 @@ const featuredTools = [
     to: '/services/articles'
   },
   {
-    title: 'Support Sites',
+    title: 'Support Desk',
     badge: 'Suite',
-    body: 'Support-style pages and page-builder utilities live in the same service board.',
+    body: 'Support workflows and escalation utilities live in the same service board.',
     icon: Users,
     to: '/services/support-sites'
   },
   {
     title: 'Opay',
     badge: 'Popular',
-    body: 'Jump straight into bank-slip style generation from a popular service tile.',
+    body: 'Jump straight into wallet-record creation from a popular service tile.',
     icon: FileText,
     to: '/services/opay'
   }

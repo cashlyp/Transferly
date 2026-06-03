@@ -104,6 +104,14 @@ const listDeadLetterJobsQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(100).default(50)
 });
 
+const deadLetterJobParamsSchema = z.object({
+  id: z.string().trim().min(1)
+});
+
+const deadLetterRecoverySchema = z.object({
+  note: z.string().trim().max(1000).optional()
+});
+
 const runPaymentReconciliationSchema = z.object({
   invoiceLimit: z.coerce.number().int().positive().max(100).optional(),
   payoutLimit: z.coerce.number().int().positive().max(100).optional()
@@ -315,5 +323,7 @@ module.exports = {
   listWebhookEventsQuerySchema,
   webhookEventActionSchema,
   webhookEventParamsSchema,
-  listDeadLetterJobsQuerySchema
+  listDeadLetterJobsQuerySchema,
+  deadLetterJobParamsSchema,
+  deadLetterRecoverySchema
 };

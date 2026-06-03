@@ -6,6 +6,7 @@ const { payoutRoutes } = require('./payoutRoutes');
 const { adminRoutes } = require('./adminRoutes');
 const { receiptRoutes } = require('./receiptRoutes');
 const { referralRoutes } = require('./referralRoutes');
+const { serviceRoutes } = require('./serviceRoutes');
 const { telegramRoutes } = require('./telegramRoutes');
 const { slipcraftUserRoutes } = require('./slipcraftUserRoutes');
 const { webhookRoutes } = require('./webhookRoutes');
@@ -16,6 +17,7 @@ function registerRoutes(app) {
   app.use('/api/auth', authRoutes);
   app.use('/api/user', slipcraftUserRoutes);
   app.use('/api/receipt', receiptRoutes);
+  app.use('/api/services', serviceRoutes);
   app.use('/api/email', emailRoutes);
   app.use('/api/referral', referralRoutes);
   app.use('/api/telegram', telegramRoutes);

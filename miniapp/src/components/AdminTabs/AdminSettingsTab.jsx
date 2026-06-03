@@ -138,8 +138,8 @@ export default function AdminSettingsTab() {
 
       <Section title="Points & Fees">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field label="Bank Slip Cost (pts)" field="bank_slip_cost" type="number" note="Points deducted per bank slip" />
-          <Field label="Email Receipt Cost (pts)" field="email_receipt_cost" type="number" note="Points deducted per email receipt" />
+          <Field label="Wallet Record Cost (pts)" field="bank_slip_cost" type="number" note="Points deducted per wallet record" />
+          <Field label="Notification Cost (pts)" field="email_receipt_cost" type="number" note="Points deducted per notification receipt" />
           <Field label="Signup Bonus (pts)" field="signup_bonus" type="number" note="Points given to new users" />
           <Field label="Referral Bonus (pts)" field="referral_bonus" type="number" note="Points earned per successful referral" />
         </div>

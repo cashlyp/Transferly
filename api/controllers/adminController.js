@@ -21,6 +21,8 @@ const {
   listAdminPayoutsQuerySchema,
   listTopUpOrdersQuerySchema,
   listDeadLetterJobsQuerySchema,
+  deadLetterJobParamsSchema,
+  deadLetterRecoverySchema,
   listRiskFlagsQuerySchema,
   listWebhookEventsQuerySchema,
   paymentOpsIssueActionSchema,
@@ -46,6 +48,7 @@ const {
   presentInvoiceReminderConfiguration,
   presentInvoiceTemplate,
   presentPaymentOpsIssue,
+  presentProviderHealthReport,
   presentQueueOverview,
   presentRiskFlag,
   presentWebhookEvent,
@@ -66,6 +69,7 @@ const { providerBalanceService } = require('../services/providerBalanceService')
 const { providerInvoiceService } = require('../services/providerInvoiceService');
 const { invoiceTemplateService } = require('../services/invoiceTemplateService');
 const { paymentOpsIssueService } = require('../services/paymentOpsIssueService');
+const { providerHealthService } = require('../services/providerHealthService');
 const { paypalPayoutService } = require('../services/paypalPayoutService');
 const { providerPayoutService } = require('../services/providerPayoutService');
 const { slipcraftUserService } = require('../services/slipcraftUserService');
@@ -204,6 +208,11 @@ async function listPaymentProvidersController(_request, response) {
   response.json({
     data: paymentProviderRegistry.listProviders()
   });
+}
+
+async function listPaymentProviderHealthController(_request, response) {
+  const report = await providerHealthService.getProviderHealthReport();
+  response.json(presentProviderHealthReport(report));
 }
 
 async function getPaymentProviderController(request, response) {
@@ -422,6 +431,19 @@ async function listDeadLetterJobsController(request, response) {
   const jobs = await opsService.listDeadLetterJobs(query.limit);
   response.json({
     data: jobs.map(presentDeadLetterJob)
+  });
+}
+
+async function recoverDeadLetterJobController(request, response) {
+  const params = deadLetterJobParamsSchema.parse(request.params || {});
+  const body = deadLetterRecoverySchema.parse(request.body || {});
+  const result = await opsService.recoverDeadLetterJob(params.id, {
+    adminActorId: request.adminActorId,
+    note: body.note
+  });
+  response.json({
+    dead_letter: presentDeadLetterJob(result.dead_letter),
+    recovery: result.recovery
   });
 }
 
@@ -670,10 +692,12 @@ module.exports = {
   reopenPaymentOpsIssueController,
   resolvePaymentOpsIssueController,
   getQueueOverviewController,
+  listPaymentProviderHealthController,
   getPaymentProviderInvoiceFeaturesController,
   getPaymentProviderBalanceController,
   getPaymentProviderController,
   listDeadLetterJobsController,
+  recoverDeadLetterJobController,
   listPaymentProviderInvoiceFeaturesController,
   listPaymentProvidersController,
   listStripeConnectedAccountsController,

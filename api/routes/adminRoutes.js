@@ -33,12 +33,14 @@ const {
   listTopUpOrdersController,
   listDeadLetterJobsController,
   listPaymentOpsIssuesController,
+  listPaymentProviderHealthController,
   listPaymentProviderInvoiceFeaturesController,
   listPaymentProvidersController,
   listStripeConnectedAccountsController,
   reopenPaymentOpsIssueController,
   runPaymentReconciliationController,
   rejectPayoutController,
+  recoverDeadLetterJobController,
   refreshAdminInvoiceController,
   refreshStripeConnectedAccountController,
   resolvePaymentOpsIssueController,
@@ -101,6 +103,7 @@ router.get(
   requireAdminActor,
   asyncHandler(listPaymentProviderInvoiceFeaturesController)
 );
+router.get('/payment-providers/health', requireAdminActor, asyncHandler(listPaymentProviderHealthController));
 router.get(
   '/payment-providers/:provider/invoice-features',
   requireAdminActor,
@@ -127,6 +130,7 @@ router.post('/webhooks/:id/replay', requireAdminActor, asyncHandler(replayWebhoo
 router.post('/webhooks/:id/ignore', requireAdminActor, asyncHandler(ignoreWebhookEventController));
 router.get('/queues', requireAdminActor, asyncHandler(getQueueOverviewController));
 router.get('/dead-letters', requireAdminActor, asyncHandler(listDeadLetterJobsController));
+router.post('/dead-letters/:id/recover', requireAdminActor, asyncHandler(recoverDeadLetterJobController));
 router.post('/reconciliation/run', requireAdminActor, asyncHandler(runPaymentReconciliationController));
 router.patch('/config', requireAdminActor, asyncHandler(updateAdminConfigController));
 router.post('/faqs', requireAdminActor, asyncHandler(createAdminFaqController));

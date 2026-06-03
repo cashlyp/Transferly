@@ -47,26 +47,26 @@ const features = [
   {
     icon: Bot,
     eyebrow: 'New',
-    title: 'AI Reply',
+    title: 'Support AI Reply',
     body: 'Paste a message or screenshot and get a clean response tone before you send.'
   },
   {
     icon: FileText,
     eyebrow: 'Popular',
-    title: 'Receipt Generation',
-    body: 'Build polished bank-slip style receipts and downloadable visual proofs in minutes.'
+    title: 'Wallet Records',
+    body: 'Build polished Transferly wallet records and downloadable support proofs in minutes.'
   },
   {
     icon: Mail,
     eyebrow: 'Live',
-    title: 'Flash Emails',
-    body: 'Shape sender-style emails with point-based actions and fast output for your workflow.'
+    title: 'Verified Notifications',
+    body: 'Shape provider-aware status notifications with point-based actions and fast output for your workflow.'
   },
   {
     icon: Map,
     eyebrow: 'Suite',
-    title: 'Support Pages',
-    body: 'Spin up support-style surfaces and operational landing pages from the same account.'
+    title: 'Support Desk',
+    body: 'Manage support surfaces, help content, and escalation context from the same account.'
   },
   {
     icon: Shield,
@@ -188,20 +188,20 @@ export default function HomePage() {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Featured</p>
-                            <p className="mt-1 text-lg font-black tracking-[-0.03em]">AI Reply</p>
+                          <p className="mt-1 text-lg font-black tracking-[-0.03em]">Support AI Reply</p>
                           </div>
                           <Bot size={20} className="text-slate-400" />
                         </div>
-                        <p className="mt-3 text-sm leading-6 text-slate-600">Smart AI-powered replies for any conversation.</p>
+                        <p className="mt-3 text-sm leading-6 text-slate-600">Smart AI-powered replies for customer support workflows.</p>
                       </div>
                       <div className="grid gap-3 sm:grid-cols-2">
                         <div className="rounded-[22px] bg-white/5 p-4">
-                          <p className="text-sm font-bold">Bank Slips</p>
-                          <p className="mt-2 text-xs uppercase tracking-[0.14em] text-white/42">Generate</p>
+                          <p className="text-sm font-bold">Wallet Records</p>
+                          <p className="mt-2 text-xs uppercase tracking-[0.14em] text-white/42">Create</p>
                         </div>
                         <div className="rounded-[22px] bg-white/5 p-4">
-                          <p className="text-sm font-bold">Flash Emails</p>
-                          <p className="mt-2 text-xs uppercase tracking-[0.14em] text-white/42">Send</p>
+                          <p className="text-sm font-bold">Notifications</p>
+                          <p className="mt-2 text-xs uppercase tracking-[0.14em] text-white/42">Draft</p>
                         </div>
                       </div>
                     </div>

@@ -82,6 +82,8 @@ function getActionCapability(action) {
   if (
     value.startsWith("GROUP:") ||
     value.startsWith("SERVICE:") ||
+    value.startsWith("SERVICE_ACTION:") ||
+    value.startsWith("SERVICE_LANE:") ||
     value.startsWith("PROVIDER:") ||
     value.startsWith("PROVIDER_CUSTOM:") ||
     value.startsWith("PROVIDER_LANE:") ||

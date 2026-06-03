@@ -9,6 +9,18 @@ async function handleServiceCallback(ctx, action, { handlers }) {
     return true;
   }
 
+  if (action.startsWith("SERVICE_ACTION:")) {
+    const [, slug, laneId] = action.split(":");
+    await handlers.handleServiceLaneAction(ctx, slug, laneId);
+    return true;
+  }
+
+  if (action.startsWith("SERVICE_LANE:")) {
+    const [, slug, laneId] = action.split(":");
+    await handlers.handleServiceLane(ctx, slug, laneId);
+    return true;
+  }
+
   if (action.startsWith("RUN:")) {
     const service = handlers.getService(action.slice("RUN:".length));
     await handlers.runServiceReceipt(ctx, service);

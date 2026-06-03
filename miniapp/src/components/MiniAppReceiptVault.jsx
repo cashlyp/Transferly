@@ -18,8 +18,8 @@ import { useTelegramMiniApp } from '../context/TelegramMiniAppContext';
 
 const filters = [
   { key: 'all', label: 'All' },
-  { key: 'bank', label: 'Bank' },
-  { key: 'email', label: 'Mail' }
+  { key: 'bank', label: 'Wallet' },
+  { key: 'email', label: 'Notification' }
 ];
 
 function generateTransactionRef() {
@@ -66,9 +66,9 @@ function describeReceipt(receipt) {
   if (type === 'email') {
     return {
       type,
-      title: details.subject || receipt?.title || 'Flash mail receipt',
+      title: details.subject || receipt?.title || 'Notification receipt',
       meta: details.toEmail || details.to_email || receipt?.emailTo || 'No recipient email',
-      amount: details.provider || 'Flash mail',
+      amount: details.provider || 'Notification',
       status: 'Sent',
       createdAt,
       searchText: [
@@ -87,7 +87,7 @@ function describeReceipt(receipt) {
     type,
     title: details.receiverName
       ? `${details.senderName || 'Sender'} to ${details.receiverName}`
-      : receipt?.title || 'Bank transfer receipt',
+      : receipt?.title || 'Wallet record receipt',
     meta: details.transactionRef || details.sessionId || receipt?.id || 'No reference',
     amount: details.amount ? `${details.amount}` : 'Amount unavailable',
     status: details.status || 'Generated',
@@ -146,7 +146,7 @@ function buildShareText(receipt) {
   const details = describeReceipt(receipt);
   return [
     details.title,
-    `Type: ${details.type === 'bank' ? 'Bank slip' : 'Flash mail'}`,
+    `Type: ${details.type === 'bank' ? 'Wallet record' : 'Notification'}`,
     `Amount: ${details.amount}`,
     `Reference: ${details.meta}`,
     `Status: ${details.status}`
@@ -191,7 +191,7 @@ function ReceiptRow({ receipt, selected, onSelect }) {
             <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${
               selected ? 'bg-white/16 text-white' : 'bg-[var(--tg-secondary-bg-color)] text-[var(--tg-hint-color)]'
             }`}>
-              {details.type === 'bank' ? 'Bank' : 'Mail'}
+              {details.type === 'bank' ? 'Wallet' : 'Notification'}
             </span>
           </div>
           <p className={`mt-1 truncate text-xs font-bold ${selected ? 'text-white/76' : 'text-[var(--tg-hint-color)]'}`}>
@@ -440,8 +440,8 @@ export default function MiniAppReceiptVault() {
 
       <div className="grid gap-3 sm:grid-cols-3">
         <StatPill label="Receipts" value={stats.total.toLocaleString()} icon={Receipt} />
-        <StatPill label="Bank slips" value={stats.bank.toLocaleString()} icon={FileText} />
-        <StatPill label="Flash mails" value={stats.email.toLocaleString()} icon={Mail} />
+        <StatPill label="Wallet records" value={stats.bank.toLocaleString()} icon={FileText} />
+        <StatPill label="Notifications" value={stats.email.toLocaleString()} icon={Mail} />
       </div>
 
       <section className="rounded-[26px] bg-[var(--tg-section-bg-color)] p-4 shadow-sm">

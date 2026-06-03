@@ -464,7 +464,7 @@ export default function MiniAppPointsWallet() {
       <section className="rounded-[30px] bg-[var(--tg-section-bg-color)] p-5 shadow-sm">
         <div className="grid gap-3 sm:grid-cols-3">
           <PillStat label="Bank slip cost" value={`${Number(config?.bank_slip_cost || 10).toLocaleString()} pts`} tone="accent" />
-          <PillStat label="Flash mail cost" value={`${Number(config?.email_receipt_cost || 5).toLocaleString()} pts`} />
+          <PillStat label="Notification cost" value={`${Number(config?.email_receipt_cost || 5).toLocaleString()} pts`} />
           <PillStat label="Intent" value={selectedService?.title || 'General'} />
         </div>
       </section>

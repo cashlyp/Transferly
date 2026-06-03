@@ -11,7 +11,7 @@ function customDetailsLane(providerKey, providerName, bullets) {
   return {
     id: 'custom-details',
     title: 'Custom Details',
-    subtitle: `Open the ${providerName}-styled flash-mail builder with ${providerName} context already applied.`,
+    subtitle: `Open the ${providerName} notification builder with ${providerName} context already applied.`,
     kind: 'custom',
     status: 'live',
     ctaLabel: 'Open Custom Details',
@@ -75,11 +75,11 @@ export const paymentProviderLaunchers = {
     eyebrow: 'Official provider workspace',
     statusLabel: 'Live PayPal adapter',
     description:
-      'Use PayPal as the production-facing workspace for hosted invoices, payout review, provider-state sync, flash mail, and release controls.',
+      'Use PayPal as the production-facing workspace for hosted invoices, payout review, provider-state sync, verified notifications, and release controls.',
     accent: providerAccent.paypal,
-    capabilities: ['Hosted invoices', 'Official payouts', 'Flash mail', 'Provider webhooks'],
+    capabilities: ['Hosted invoices', 'Official payouts', 'Verified notifications', 'Provider webhooks'],
     lanes: [
-      customDetailsLane('paypal', 'PayPal', ['PayPal-styled sender', 'Editable receipt body', 'Deposit or custom mail context']),
+      customDetailsLane('paypal', 'PayPal', ['PayPal-styled sender', 'Editable receipt body', 'Deposit or custom notification context']),
       invoicesLane('live', 'Create, send, refresh, release, and open official hosted PayPal invoice links.', [
         'Hosted invoice links',
         'QR generation',
@@ -145,7 +145,7 @@ export const paymentProviderLaunchers = {
     accent: providerAccent.wise,
     capabilities: ['Quotes', 'Recipients', 'Transfers', 'Receipts'],
     lanes: [
-      customDetailsLane('wise', 'Wise', ['Wise-styled sender', 'Transfer notice body', 'Deposit or custom mail context']),
+      customDetailsLane('wise', 'Wise', ['Wise-styled sender', 'Transfer notice body', 'Deposit or custom notification context']),
       invoicesLane('setup', 'Wise is payout-first in Transferly, so this lane explains why invoice collection should use another provider.', [
         'No invoice collection',
         'Use hosted invoice providers',
