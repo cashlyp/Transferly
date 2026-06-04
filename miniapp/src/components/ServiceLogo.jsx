@@ -14,10 +14,24 @@ const logoSrcBySlug = {
   zelle: '/brand-logos/zelle.png',
   venmo: '/brand-logos/venmo.png',
   'trust-wallet': '/brand-logos/trust-wallet.png',
-  gcash: '/brand-logos/gcash.png'
+  gcash: '/brand-logos/gcash.png',
+  'ai-reply': '/brand-logos/ai-reply.svg',
+  articles: '/brand-logos/articles.svg',
+  'faker-data': '/brand-logos/faker-data.svg',
+  stripe: '/brand-logos/stripe.svg',
+  paystack: '/brand-logos/paystack.svg',
+  flutterwave: '/brand-logos/flutterwave.svg',
+  crypto: '/brand-logos/crypto.svg',
+  'crypto-receipts': '/brand-logos/crypto-receipts.svg',
+  'support-sites': '/brand-logos/support-sites.svg',
+  'pass-clone': '/brand-logos/pass-clone.svg',
+  'wallet-tracker': '/brand-logos/wallet-tracker.svg',
+  'qr-code': '/brand-logos/qr-code.svg',
+  'link-shortener': '/brand-logos/link-shortener.svg',
+  investinnova: '/brand-logos/investinnova.svg'
 };
 
-export function ServiceLogo({ service, size = 'md', showTitle = false }) {
+export function ServiceLogo({ service, size = 'md', showTitle = false, className = '' }) {
   const accent = service?.accent || {
     bg: '#1f2937',
     fg: '#f8fafc',
@@ -47,7 +61,7 @@ export function ServiceLogo({ service, size = 'md', showTitle = false }) {
   const logoSrc = service?.logoSrc || logoSrcBySlug[service?.slug] || null;
 
   return (
-    <div className="inline-flex items-center gap-3">
+    <div className={`inline-flex items-center gap-3 ${className}`}>
       <div
         className={`relative flex items-center justify-center overflow-hidden border bg-white shadow-[0_18px_45px_var(--glow)] ${selected.wrap}`}
         style={{

@@ -1,9 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  ArrowRight,
   BadgeCheck,
-  CheckCircle2,
   Copy,
   FileText,
   Mail,
@@ -17,9 +15,18 @@ import { useAppContext } from '../context/AppContext';
 import { useTelegramMiniApp } from '../context/TelegramMiniAppContext';
 
 const filters = [
-  { key: 'all', label: 'All' },
+  { key: 'all', label: 'All types' },
   { key: 'bank', label: 'Wallet' },
   { key: 'email', label: 'Notification' }
+];
+
+const statusFilters = [
+  { key: 'all', label: 'All' },
+  { key: 'successful', label: 'Successful' },
+  { key: 'pending', label: 'Pending' },
+  { key: 'processing', label: 'Processing' },
+  { key: 'action-needed', label: 'Action Needed' },
+  { key: 'failed', label: 'Failed' }
 ];
 
 function generateTransactionRef() {
@@ -105,6 +112,36 @@ function describeReceipt(receipt) {
   };
 }
 
+function normalizeStatus(status) {
+  const value = String(status || 'generated').toLowerCase();
+
+  if (value.includes('fail') || value.includes('reject') || value.includes('cancel')) {
+    return 'failed';
+  }
+
+  if (value.includes('pending')) {
+    return 'pending';
+  }
+
+  if (value.includes('action') || value.includes('review') || value.includes('attention')) {
+    return 'action-needed';
+  }
+
+  if (value.includes('process') || value.includes('generat') || value.includes('await')) {
+    return 'processing';
+  }
+
+  if (value.includes('sent') || value.includes('success') || value.includes('complete') || value.includes('save')) {
+    return 'successful';
+  }
+
+  return 'successful';
+}
+
+function statusLabelFromKey(key) {
+  return statusFilters.find((filter) => filter.key === key)?.label || 'Successful';
+}
+
 function buildDuplicatePayload(receipt) {
   const details = getReceiptDetails(receipt);
   const type = getReceiptType(receipt);
@@ -168,6 +205,7 @@ function StatPill({ label, value, icon: Icon }) {
 function ReceiptRow({ receipt, selected, onSelect }) {
   const details = describeReceipt(receipt);
   const Icon = details.type === 'email' ? Mail : Receipt;
+  const statusKey = normalizeStatus(details.status);
 
   return (
     <button
@@ -181,7 +219,7 @@ function ReceiptRow({ receipt, selected, onSelect }) {
     >
       <div className="flex items-start gap-3">
         <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${
-          selected ? 'bg-white/16' : 'bg-[var(--tg-secondary-bg-color)] text-[var(--tg-button-color)]'
+          selected ? 'bg-white/[0.16]' : 'bg-[var(--tg-secondary-bg-color)] text-[var(--tg-button-color)]'
         }`}>
           <Icon size={20} />
         </div>
@@ -189,17 +227,17 @@ function ReceiptRow({ receipt, selected, onSelect }) {
           <div className="flex items-center justify-between gap-3">
             <h3 className="truncate text-sm font-black">{details.title}</h3>
             <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${
-              selected ? 'bg-white/16 text-white' : 'bg-[var(--tg-secondary-bg-color)] text-[var(--tg-hint-color)]'
+              selected ? 'bg-white/[0.16] text-white' : 'bg-[var(--tg-secondary-bg-color)] text-[var(--tg-hint-color)]'
             }`}>
               {details.type === 'bank' ? 'Wallet' : 'Notification'}
             </span>
           </div>
-          <p className={`mt-1 truncate text-xs font-bold ${selected ? 'text-white/76' : 'text-[var(--tg-hint-color)]'}`}>
+          <p className={`mt-1 truncate text-xs font-bold ${selected ? 'text-white/[0.76]' : 'text-[var(--tg-hint-color)]'}`}>
             {details.meta}
           </p>
           <div className="mt-3 flex items-center justify-between gap-3 text-xs font-black">
             <span>{details.amount}</span>
-            <span>{details.status}</span>
+            <span>{statusLabelFromKey(statusKey)}</span>
           </div>
         </div>
       </div>
@@ -301,6 +339,8 @@ export default function MiniAppReceiptVault() {
   const telegram = useTelegramMiniApp();
   const [query, setQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [sortOrder, setSortOrder] = useState('newest');
   const [selectedKey, setSelectedKey] = useState('');
   const [duplicating, setDuplicating] = useState(false);
 
@@ -314,6 +354,10 @@ export default function MiniAppReceiptVault() {
           return false;
         }
 
+        if (statusFilter !== 'all' && normalizeStatus(details.status) !== statusFilter) {
+          return false;
+        }
+
         if (!normalizedQuery) {
           return true;
         }
@@ -323,16 +367,26 @@ export default function MiniAppReceiptVault() {
       .sort((left, right) => {
         const leftDate = new Date(left.created_at || left.createdAt || 0).getTime();
         const rightDate = new Date(right.created_at || right.createdAt || 0).getTime();
-        return rightDate - leftDate;
+        return sortOrder === 'oldest' ? leftDate - rightDate : rightDate - leftDate;
       });
-  }, [query, receipts, typeFilter]);
+  }, [query, receipts, sortOrder, statusFilter, typeFilter]);
 
   const selectedReceipt = filteredReceipts.find((receipt) => getReceiptKey(receipt) === selectedKey) || filteredReceipts[0] || null;
   const stats = {
     total: receipts.length,
-    bank: receipts.filter((receipt) => getReceiptType(receipt) === 'bank').length,
-    email: receipts.filter((receipt) => getReceiptType(receipt) === 'email').length
+    statuses: statusFilters.reduce((counts, filter) => {
+      if (filter.key === 'all') {
+        return { ...counts, all: receipts.length };
+      }
+
+      return {
+        ...counts,
+        [filter.key]: receipts.filter((receipt) => normalizeStatus(describeReceipt(receipt).status) === filter.key).length
+      };
+    }, {})
   };
+  const needsAttentionCount = ['pending', 'action-needed', 'failed']
+    .reduce((total, key) => total + Number(stats.statuses[key] || 0), 0);
 
   useEffect(() => {
     if (!selectedReceipt) {
@@ -391,6 +445,19 @@ export default function MiniAppReceiptVault() {
     }
   };
 
+  const resetFilters = () => {
+    setQuery('');
+    setTypeFilter('all');
+    setStatusFilter('all');
+    setSortOrder('newest');
+  };
+
+  const refreshTransactions = () => {
+    resetFilters();
+    telegram.impact('light');
+    toast.success('Transactions refreshed');
+  };
+
   useEffect(() => {
     const button = telegram.webApp?.MainButton;
     if (!button) {
@@ -424,52 +491,80 @@ export default function MiniAppReceiptVault() {
   return (
     <div className="space-y-4">
       <section className="rounded-[30px] bg-[var(--tg-section-bg-color)] p-5 shadow-sm">
-        <div className="flex items-start gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-[22px] bg-[var(--tg-button-color)] text-[var(--tg-button-text-color)]">
-            <FileText size={26} />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--tg-hint-color)]">Native vault</p>
-            <h2 className="mt-2 text-3xl font-black tracking-[-0.05em] text-[var(--tg-text-color)]">Receipt Vault</h2>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <h2 className="text-3xl font-black tracking-[-0.05em] text-[var(--tg-text-color)]">Your transactions</h2>
             <p className="mt-2 text-sm leading-7 text-[var(--tg-subtitle-text-color)]">
-              Search receipts, inspect details, copy a summary, or duplicate a saved receipt into a fresh template.
+              Review your point purchases, service orders, and account activity.
             </p>
           </div>
+          <button
+            type="button"
+            onClick={refreshTransactions}
+            className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-[18px] bg-[var(--tg-button-color)] px-5 text-sm font-black text-[var(--tg-button-text-color)] transition active:scale-[0.99]"
+          >
+            <RefreshCw size={16} />
+            Refresh
+          </button>
         </div>
       </section>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <StatPill label="Receipts" value={stats.total.toLocaleString()} icon={Receipt} />
-        <StatPill label="Wallet records" value={stats.bank.toLocaleString()} icon={FileText} />
-        <StatPill label="Notifications" value={stats.email.toLocaleString()} icon={Mail} />
+        <StatPill label="All time" value={stats.total.toLocaleString()} icon={Receipt} />
+        <StatPill label="Successful" value={Number(stats.statuses.successful || 0).toLocaleString()} icon={FileText} />
+        <StatPill label="Needs attention" value={needsAttentionCount.toLocaleString()} icon={Mail} />
       </div>
 
       <section className="rounded-[26px] bg-[var(--tg-section-bg-color)] p-4 shadow-sm">
-        <div className="relative">
-          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--tg-hint-color)]" />
-          <input
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search sender, receiver, subject, or reference"
-            className="w-full rounded-[20px] border border-black/5 bg-[var(--tg-secondary-bg-color)] py-3 pl-11 pr-4 text-sm font-bold text-[var(--tg-text-color)] outline-none transition placeholder:text-[var(--tg-hint-color)] focus:border-[var(--tg-button-color)]"
-            aria-label="Search receipts"
-          />
+        <div>
+          <div className="relative">
+            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--tg-hint-color)]" />
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search by title, type, or ID"
+              className="w-full rounded-[20px] border border-black/5 bg-[var(--tg-secondary-bg-color)] py-3 pl-11 pr-4 text-sm font-bold text-[var(--tg-text-color)] outline-none transition placeholder:text-[var(--tg-hint-color)] focus:border-[var(--tg-button-color)]"
+              aria-label="Search transactions"
+            />
+          </div>
         </div>
 
-        <div className="mt-3 grid grid-cols-3 gap-2">
-          {filters.map((filter) => (
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          <select
+            value={typeFilter}
+            onChange={(event) => setTypeFilter(event.target.value)}
+            className="h-12 rounded-[18px] border border-black/5 bg-[var(--tg-secondary-bg-color)] px-4 text-sm font-black text-[var(--tg-text-color)] outline-none focus:border-[var(--tg-button-color)]"
+            aria-label="Filter transaction type"
+          >
+            {filters.map((filter) => (
+              <option key={filter.key} value={filter.key}>{filter.label}</option>
+            ))}
+          </select>
+          <select
+            value={sortOrder}
+            onChange={(event) => setSortOrder(event.target.value)}
+            className="h-12 rounded-[18px] border border-black/5 bg-[var(--tg-secondary-bg-color)] px-4 text-sm font-black text-[var(--tg-text-color)] outline-none focus:border-[var(--tg-button-color)]"
+            aria-label="Sort transactions"
+          >
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+          </select>
+        </div>
+
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+          {statusFilters.map((filter) => (
             <button
               key={filter.key}
               type="button"
-              onClick={() => setTypeFilter(filter.key)}
-              className={`h-11 rounded-[16px] text-xs font-black uppercase tracking-[0.12em] transition active:scale-[0.99] ${
-                typeFilter === filter.key
+              onClick={() => setStatusFilter(filter.key)}
+              className={`shrink-0 rounded-full px-3 py-2 text-[11px] font-black transition active:scale-[0.99] ${
+                statusFilter === filter.key
                   ? 'bg-[var(--tg-button-color)] text-[var(--tg-button-text-color)]'
                   : 'bg-[var(--tg-secondary-bg-color)] text-[var(--tg-hint-color)]'
               }`}
             >
-              {filter.label}
+              {filter.label} {Number(stats.statuses[filter.key] || 0).toLocaleString()}
             </button>
           ))}
         </div>
@@ -478,14 +573,10 @@ export default function MiniAppReceiptVault() {
       {receipts.length === 0 ? (
         <section className="rounded-[30px] bg-[var(--tg-section-bg-color)] p-8 text-center shadow-sm">
           <FileText size={48} className="mx-auto text-[var(--tg-hint-color)]" />
-          <h2 className="mt-5 text-2xl font-black tracking-[-0.04em] text-[var(--tg-text-color)]">No receipts yet</h2>
+          <h2 className="mt-5 text-2xl font-black tracking-[-0.04em] text-[var(--tg-text-color)]">No transactions yet</h2>
           <p className="mt-2 text-sm leading-7 text-[var(--tg-subtitle-text-color)]">
-            Generate your first receipt in the studio, then return here to search, duplicate, and copy details.
+            Once you start using Transferly, your activity will appear here.
           </p>
-          <Link to="/miniapp/studio" className="mt-5 inline-flex items-center justify-center gap-2 rounded-[20px] bg-[var(--tg-button-color)] px-5 py-3 text-sm font-black text-[var(--tg-button-text-color)]">
-            Open studio
-            <ArrowRight size={16} />
-          </Link>
         </section>
       ) : (
         <div className="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(320px,1.1fr)]">
@@ -501,7 +592,7 @@ export default function MiniAppReceiptVault() {
               <div className="rounded-[24px] bg-[var(--tg-section-bg-color)] p-6 text-center shadow-sm">
                 <Search size={34} className="mx-auto text-[var(--tg-hint-color)]" />
                 <p className="mt-3 text-sm font-black text-[var(--tg-text-color)]">No matching receipts</p>
-                <button type="button" onClick={() => { setQuery(''); setTypeFilter('all'); }} className="mt-3 rounded-full bg-[var(--tg-secondary-bg-color)] px-4 py-2 text-xs font-black text-[var(--tg-text-color)]">
+                <button type="button" onClick={resetFilters} className="mt-3 rounded-full bg-[var(--tg-secondary-bg-color)] px-4 py-2 text-xs font-black text-[var(--tg-text-color)]">
                   Reset filters
                 </button>
               </div>
@@ -516,17 +607,6 @@ export default function MiniAppReceiptVault() {
           />
         </div>
       )}
-
-      <div className="flex flex-wrap items-center gap-3">
-        <Link to="/miniapp/studio" className="flex items-center justify-center gap-2 rounded-[20px] bg-[var(--tg-button-color)] px-5 py-3 text-sm font-black text-[var(--tg-button-text-color)] shadow-sm">
-          New receipt
-          <ArrowRight size={16} />
-        </Link>
-        <Link to="/transactions" className="flex items-center justify-center gap-2 rounded-[20px] bg-[var(--tg-section-bg-color)] px-5 py-3 text-sm font-black text-[var(--tg-text-color)] shadow-sm">
-          Full web history
-          <ArrowRight size={16} />
-        </Link>
-      </div>
     </div>
   );
 }

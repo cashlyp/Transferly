@@ -1,0 +1,233 @@
+- main [ref=e2]:
+  - generic [ref=e4]:
+    - banner [ref=e5]:
+      - generic [ref=e8]:
+        - generic [ref=e9]:
+          - link "Brand home page" [ref=e10] [cursor=pointer]:
+            - /url: /mep/dashboard
+            - img "brand logo" [ref=e11]
+          - heading "Test Store" [level=2] [ref=e12]
+        - generic [ref=e13]:
+          - generic [ref=e15]:
+            - button [ref=e16] [cursor=pointer]:
+              - img:
+                - img
+            - generic [ref=e19]: "0"
+          - button "Menu" [ref=e20] [cursor=pointer]:
+            - img:
+              - img
+            - generic [ref=e21]: Menu
+    - generic [ref=e24]:
+      - generic [ref=e113]:
+        - generic [ref=e114]:
+          - generic [ref=e115]:
+            - heading "$5,000.00" [level=1] [ref=e116]
+            - heading "USD" [level=3] [ref=e117]
+          - paragraph [ref=e118]: Available balance
+        - button "Manage money chevron down icon" [ref=e121] [cursor=pointer]:
+          - generic [ref=e122]:
+            - text: Manage money
+            - img "chevron down icon":
+              - img
+      - generic [ref=e29]:
+        - paragraph [ref=e30]:
+          - text: Quick access
+          - button "Edit your quick links" [ref=e31] [cursor=pointer]:
+            - generic [ref=e32]:
+              - img:
+                - img
+        - generic [ref=e36]:
+          - list [ref=e39]:
+            - listitem [ref=e40]:
+              - link "others icon Business Tools" [ref=e41] [cursor=pointer]:
+                - /url: /mep/merchantapps/businesstools
+                - img "others icon" [ref=e123]
+                - generic [ref=e44]: Business Tools
+            - listitem [ref=e45]:
+              - link "invoice icon Invoicing" [ref=e46] [cursor=pointer]:
+                - /url: /invoice/manage
+                - img "invoice icon" [ref=e124]
+                - generic [ref=e49]: Invoicing
+            - listitem [ref=e50]:
+              - link "request-money icon Request money" [ref=e51] [cursor=pointer]:
+                - /url: /myaccount/transfer/request
+                - img "request-money icon" [ref=e125]
+                - generic [ref=e54]: Request money
+            - listitem [ref=e55]:
+              - link "send-money icon Send money" [ref=e56] [cursor=pointer]:
+                - /url: /myaccount/transfer/pay
+                - img "send-money icon" [ref=e126]
+                - generic [ref=e59]: Send money
+            - listitem [ref=e60]:
+              - link "link icon PayPal.Me" [ref=e61] [cursor=pointer]:
+                - /url: /paypalme/my/landing
+                - img "link icon" [ref=e127]
+                - generic [ref=e64]: PayPal.Me
+            - listitem [ref=e65]:
+              - link "shopping-cart icon PayPal Checkout" [ref=e66] [cursor=pointer]:
+                - /url: /mep/merchantapps/businesstools/acceptpayments/checkout
+                - img "shopping-cart icon" [ref=e128]
+                - generic [ref=e69]: PayPal Checkout
+            - listitem [ref=e70]:
+              - link "working-capital icon PayPal Working Capital" [ref=e71] [cursor=pointer]:
+                - /url: /workingcapital/
+                - img "working-capital icon" [ref=e129]
+                - generic [ref=e74]: PayPal Working Capital
+            - listitem [ref=e75]:
+              - link "button icon Payment Links & Buttons" [ref=e76] [cursor=pointer]:
+                - /url: /ncp/links/create
+                - img "button icon" [ref=e130]
+                - generic [ref=e79]: Payment Links & Buttons
+            - listitem [ref=e80]:
+              - link "credit-card icon Business Debit Card" [ref=e81] [cursor=pointer]:
+                - /url: /myaccount/debit-card
+                - img "credit-card icon" [ref=e131]
+                - generic [ref=e84]: Business Debit Card
+            - listitem [ref=e85]:
+              - link "arrows-clockwise icon Store Sync" [ref=e86] [cursor=pointer]:
+                - /url: /storesync
+                - img "arrows-clockwise icon" [ref=e132]
+                - generic [ref=e89]: Store Sync
+          - button [ref=e91] [cursor=pointer]:
+            - img:
+              - img
+            - generic [ref=e92]: Scroll right
+      - generic [ref=e135]:
+        - generic [ref=e136]:
+          - generic [ref=e137]:
+            - paragraph [ref=e138]: Business Performance
+            - paragraph [ref=e139]: All comparisons to previous 30 days
+          - link "View more" [ref=e141] [cursor=pointer]:
+            - /url: /performance
+        - generic [ref=e142]:
+          - list [ref=e145]:
+            - listitem [ref=e146]:
+              - generic [ref=e147]:
+                - link "Total sales volume" [ref=e148] [cursor=pointer]:
+                  - /url: /performance/sales
+                - generic [ref=e149]
+            - listitem [ref=e160]:
+              - generic [ref=e161]:
+                - link "Average order value" [ref=e162] [cursor=pointer]:
+                  - /url: /performance/orders
+                - generic [ref=e163]
+            - listitem [ref=e174]:
+              - generic [ref=e175]:
+                - link "Total customers" [ref=e176] [cursor=pointer]:
+                  - /url: /performance/sales
+                - generic [ref=e177]
+            - listitem [ref=e188]:
+              - generic [ref=e189]:
+                - link "Total sales count" [ref=e190] [cursor=pointer]:
+                  - /url: /performance/sales
+                - generic [ref=e191]
+          - button [ref=e202] [cursor=pointer]:
+            - img:
+              - img
+            - generic [ref=e203]: Scroll right
+      - generic [ref=e97]:
+        - generic [ref=e98]:
+          - paragraph [ref=e99]: Recent activity
+          - link "View Activity" [ref=e100] [cursor=pointer]:
+            - /url: /unifiedtransactions/
+        - table "responsive" [ref=e214]:
+          - rowgroup [ref=e215]:
+            - row "5/14/26, 4:00 PM Payment to elvischalas@gmail.com $1,000.00 USD" [ref=e216]:
+              - cell "5/14/26, 4:00 PM" [ref=e217]
+              - cell "Payment to" [ref=e218]
+              - cell "elvischalas@gmail.com" [ref=e219]:
+                - link "elvischalas@gmail.com" [ref=e220] [cursor=pointer]:
+                  - /url: /activity/payment/2ED77958WN038851W
+              - cell "$1,000.00 USD" [ref=e221]
+            - row "5/4/26, 7:23 AM Payment to adannya.128@gmail.com $550.00 USD" [ref=e222]:
+              - cell "5/4/26, 7:23 AM" [ref=e223]
+              - cell "Payment to" [ref=e224]
+              - cell "adannya.128@gmail.com" [ref=e225]:
+                - link "adannya.128@gmail.com" [ref=e226] [cursor=pointer]:
+                  - /url: /activity/payment/1K776598HJ768115M
+              - cell "$550.00 USD" [ref=e227]
+            - row "5/4/26, 7:01 AM Withdraw from Bank Account $500.00 USD" [ref=e228]:
+              - cell "5/4/26, 7:01 AM" [ref=e229]
+              - cell "Withdraw from" [ref=e230]
+              - cell "Bank Account" [ref=e231]:
+                - link "Bank Account" [ref=e232] [cursor=pointer]:
+                  - /url: /activity/payment/2Y632755KG995134P
+              - cell "$500.00 USD" [ref=e233]
+            - row "5/4/26, 7:00 AM Transfer to Bank Account $500.00 USD" [ref=e234]:
+              - cell "5/4/26, 7:00 AM" [ref=e235]
+              - cell "Transfer to" [ref=e236]
+              - cell "Bank Account" [ref=e237]:
+                - link "Bank Account" [ref=e238] [cursor=pointer]:
+                  - /url: /activity/payment/6KH18084157048934
+              - cell "$500.00 USD" [ref=e239]
+      - generic [ref=e102]:
+        - paragraph [ref=e104]: Quick actions
+        - generic [ref=e242]:
+          - generic [ref=e243]:
+            - heading "Create a Payment Link" [level=4] [ref=e245]
+            - button [ref=e247] [cursor=pointer]:
+              - img:
+                - img
+          - generic [ref=e251]:
+            - textbox "Product or service name" [ref=e252]:
+              - /placeholder: " "
+            - generic [ref=e253]: Product or service name
+          - generic [ref=e254]:
+            - generic [ref=e257]:
+              - textbox "Price $" [ref=e258]:
+                - /placeholder: " "
+              - generic [ref=e259]: Price
+              - generic [ref=e260]: $
+            - generic [ref=e262]:
+              - combobox
+              - button "Currency USD" [ref=e263] [cursor=pointer]:
+                - img
+                - generic [ref=e264]: USD
+              - generic: Currency
+          - paragraph [ref=e267]: Make a shareable link so you can get paid by email, text, or on social media.
+          - generic [ref=e269]:
+            - button "Build It" [ref=e270] [cursor=pointer]
+            - generic [ref=e271]: Customize
+    - generic [ref=e274]:
+      - generic [ref=e275]:
+        - list [ref=e277]:
+          - listitem [ref=e278]:
+            - link "Help" [ref=e279] [cursor=pointer]:
+              - /url: https://www.sandbox.paypal.com/smarthelp/home
+          - listitem [ref=e280]:
+            - link "Contact" [ref=e281] [cursor=pointer]:
+              - /url: https://www.sandbox.paypal.com/smarthelp/contact-us
+          - listitem [ref=e282]:
+            - link "Sitemap" [ref=e283] [cursor=pointer]:
+              - /url: https://www.sandbox.paypal.com/merchant/education
+          - listitem [ref=e284]:
+            - link "Fees" [ref=e285] [cursor=pointer]:
+              - /url: https://www.sandbox.paypal.com/businesswallet/classic-fees
+          - listitem [ref=e286]:
+            - link "Security" [ref=e287] [cursor=pointer]:
+              - /url: https://www.sandbox.paypal.com/webapps/mpp/paypal-safety-and-security
+          - listitem [ref=e288]:
+            - link "About" [ref=e289] [cursor=pointer]:
+              - /url: https://www.sandbox.paypal.com/webapps/mpp/about
+          - listitem [ref=e290]:
+            - link "Developers" [ref=e291] [cursor=pointer]:
+              - /url: https://developer.paypal.com/
+          - listitem [ref=e292]:
+            - link "Partners" [ref=e293] [cursor=pointer]:
+              - /url: https://www.sandbox.paypal.com/webapps/mpp/solution-providers
+        - list [ref=e295]:
+          - listitem [ref=e296]:
+            - link "English" [ref=e297] [cursor=pointer]:
+              - /url: https://www.sandbox.paypal.com/businessmanage/account/accountPreferences/unifiedsettings/language/edit
+      - generic [ref=e298]:
+        - paragraph [ref=e299]: Copyright © 1999-2026 PayPal. All rights reserved.
+        - list [ref=e301]:
+          - listitem [ref=e302]:
+            - link "Privacy" [ref=e303] [cursor=pointer]:
+              - /url: https://www.sandbox.paypal.com/webapps/mpp/ua/privacy-full
+          - listitem [ref=e304]:
+            - link "Legal" [ref=e305] [cursor=pointer]:
+              - /url: https://www.sandbox.paypal.com/webapps/mpp/ua/legalhub-full
+          - listitem [ref=e306]:
+            - link "Policy updates" [ref=e307] [cursor=pointer]:
+              - /url: https://www.sandbox.paypal.com/webapps/mpp/ua/upcoming-policies-full

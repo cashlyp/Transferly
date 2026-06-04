@@ -21,23 +21,23 @@ import { serviceCatalog } from '../lib/servicesCatalog';
 const fundingMethods = [
   {
     id: 'bank-transfer',
-    title: 'Bank Transfer',
-    subtitle: 'Best for NGN deposits',
-    description: 'Create the order, send proof to the verified vendor chat, then wait for balance release.',
-    metrics: ['5-30 min', 'P2P', 'Tracked'],
+    title: 'Bank Transfer (P2P)',
+    subtitle: 'Nigerian Naira Only',
+    description: 'Buy points from verified vendors via direct bank transfer. Best rates for NGN payments.',
+    metrics: ['5-30 min', 'P2P'],
     icon: Building2,
     vendorUrl: 'https://t.me/+DhQqLRVqOHpmMmQ0',
-    instructions: 'Send transfer proof to the Telegram vendor chat after creating this order.'
+    instructions: 'Create the order, send bank transfer proof to the Telegram vendor chat, then wait for points release confirmation.'
   },
   {
     id: 'crypto-payment',
     title: 'Crypto Payment',
-    subtitle: 'Fast global funding',
-    description: 'Confirm wallet details with support, submit the transaction hash, and track the release state.',
-    metrics: ['Fast', 'Global', 'Secure'],
+    subtitle: 'Automatic & Instant',
+    description: 'Pay with Bitcoin, USDT, Ethereum, 70+ cryptocurrencies. Points are credited instantly after confirmation.',
+    metrics: ['Instant', 'Secure'],
     icon: Bitcoin,
     vendorUrl: 'https://t.me/+DhQqLRVqOHpmMmQ0',
-    instructions: 'Confirm the wallet and amount with support, then share the transaction hash.'
+    instructions: 'Confirm the wallet and amount with support, then share the transaction hash for instant release tracking.'
   }
 ];
 
@@ -97,15 +97,15 @@ function MethodCard({ method, active, onSelect }) {
     >
       <div className="flex items-start justify-between gap-3">
         <div className={`flex h-14 w-14 items-center justify-center rounded-[22px] ${
-          active ? 'bg-white/16' : 'bg-[var(--tg-secondary-bg-color)] text-[var(--tg-button-color)]'
+          active ? 'bg-white/[0.16]' : 'bg-[var(--tg-secondary-bg-color)] text-[var(--tg-button-color)]'
         }`}>
           <Icon size={24} />
         </div>
         {active ? <CheckCircle2 size={19} /> : <ArrowRight size={18} className="text-[var(--tg-hint-color)]" />}
       </div>
       <h3 className="mt-4 text-lg font-black tracking-[-0.03em]">{method.title}</h3>
-      <p className={`mt-1 text-xs font-bold ${active ? 'text-white/72' : 'text-[var(--tg-hint-color)]'}`}>{method.subtitle}</p>
-      <p className={`mt-3 text-sm leading-6 ${active ? 'text-white/78' : 'text-[var(--tg-subtitle-text-color)]'}`}>
+      <p className={`mt-1 text-xs font-bold ${active ? 'text-white/[0.72]' : 'text-[var(--tg-hint-color)]'}`}>{method.subtitle}</p>
+      <p className={`mt-3 text-sm leading-6 ${active ? 'text-white/[0.78]' : 'text-[var(--tg-subtitle-text-color)]'}`}>
         {method.description}
       </p>
       <div className="mt-4 flex flex-wrap gap-2">
@@ -113,7 +113,7 @@ function MethodCard({ method, active, onSelect }) {
           <span
             key={metric}
             className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${
-              active ? 'bg-white/16 text-white' : 'bg-[var(--tg-secondary-bg-color)] text-[var(--tg-hint-color)]'
+              active ? 'bg-white/[0.16] text-white' : 'bg-[var(--tg-secondary-bg-color)] text-[var(--tg-hint-color)]'
             }`}
           >
             {metric}
@@ -232,7 +232,7 @@ export default function MiniAppPointsWallet() {
         return;
       }
 
-      toast.success('Top-up order created');
+      toast.success('Point order created');
       telegram.notify('success');
     } catch (_error) {
       toast.error('Unable to create order');
@@ -270,7 +270,7 @@ export default function MiniAppPointsWallet() {
       return undefined;
     }
 
-    button.setText?.(creating ? 'Creating Order' : 'Create Top-Up Order');
+    button.setText?.(creating ? 'Creating Order' : 'Create Point Order');
     if (canCreate) {
       button.enable?.();
     } else {
@@ -293,7 +293,7 @@ export default function MiniAppPointsWallet() {
           <div className="absolute right-[-44px] top-[-54px] h-32 w-32 rounded-full bg-[color-mix(in_srgb,var(--tg-button-color)_24%,transparent)] blur-2xl" />
           <div className="relative flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--tg-hint-color)]">Points wallet</p>
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--tg-hint-color)]">Buy Points</p>
               <h2 className="mt-3 text-5xl font-black leading-none tracking-[-0.06em] text-[var(--tg-text-color)]">
                 {Number(profile?.points || 0).toLocaleString()}
               </h2>
@@ -318,10 +318,10 @@ export default function MiniAppPointsWallet() {
             <Banknote size={26} />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--tg-hint-color)]">Create top-up order</p>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--tg-hint-color)]">Buy Points</p>
             <h3 className="mt-2 text-2xl font-black tracking-[-0.04em] text-[var(--tg-text-color)]">{amountLabel}</h3>
             <p className="mt-2 text-sm leading-7 text-[var(--tg-subtitle-text-color)]">
-              Pick a point pack, choose a funding method, then use the Telegram button to create the order.
+              Pick a point pack, choose a funding method, then use the Telegram button to create the point order.
             </p>
           </div>
         </div>
@@ -404,7 +404,7 @@ export default function MiniAppPointsWallet() {
             disabled={!canCreate}
             className="flex items-center justify-center gap-2 rounded-[20px] bg-[var(--tg-button-color)] px-5 py-3 text-sm font-black text-[var(--tg-button-text-color)] shadow-sm transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {creating ? 'Creating order' : 'Create top-up order'}
+            {creating ? 'Creating order' : 'Create point order'}
             <Sparkles size={16} />
           </button>
           <a
@@ -443,14 +443,14 @@ export default function MiniAppPointsWallet() {
               <CheckCircle2 className="mx-auto text-[var(--tg-button-color)]" size={28} />
               <p className="mt-3 text-sm font-black text-[var(--tg-text-color)]">No funding orders yet</p>
               <p className="mt-1 text-xs font-bold leading-5 text-[var(--tg-hint-color)]">
-                Your next top-up will appear here with status and support context.
+                Your next point order will appear here with status and support context.
               </p>
             </div>
           )}
         </div>
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          <Link to="/transactions" className="flex items-center justify-center gap-2 rounded-[20px] bg-[var(--tg-secondary-bg-color)] px-5 py-3 text-sm font-black text-[var(--tg-text-color)] shadow-sm">
+          <Link to="/miniapp/orders" className="flex items-center justify-center gap-2 rounded-[20px] bg-[var(--tg-secondary-bg-color)] px-5 py-3 text-sm font-black text-[var(--tg-text-color)] shadow-sm">
             Full order history
             <ArrowRight size={16} />
           </Link>
@@ -463,7 +463,7 @@ export default function MiniAppPointsWallet() {
 
       <section className="rounded-[30px] bg-[var(--tg-section-bg-color)] p-5 shadow-sm">
         <div className="grid gap-3 sm:grid-cols-3">
-          <PillStat label="Bank slip cost" value={`${Number(config?.bank_slip_cost || 10).toLocaleString()} pts`} tone="accent" />
+          <PillStat label="Wallet record cost" value={`${Number(config?.bank_slip_cost || 10).toLocaleString()} pts`} tone="accent" />
           <PillStat label="Notification cost" value={`${Number(config?.email_receipt_cost || 5).toLocaleString()} pts`} />
           <PillStat label="Intent" value={selectedService?.title || 'General'} />
         </div>

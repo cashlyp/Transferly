@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import {
   Activity,
   AlertTriangle,
@@ -1221,7 +1221,13 @@ export function ProviderCommandCenter() {
     recoverDeadLetterJob
   } = useAppContext();
   const telegram = useTelegramMiniApp();
-  const [activeProvider, setActiveProvider] = useState('paypal');
+  const location = useLocation();
+  const requestedProvider = useMemo(() => {
+    const provider = new URLSearchParams(location.search).get('provider');
+    return provider ? provider.toLowerCase() : 'paypal';
+  }, [location.search]);
+  const appliedRequestedProviderRef = useRef('');
+  const [activeProvider, setActiveProvider] = useState(requestedProvider);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedWebhook, setSelectedWebhook] = useState(null);
   const [webhookActionId, setWebhookActionId] = useState('');
@@ -1345,6 +1351,17 @@ export function ProviderCommandCenter() {
       setActiveProvider(providerRows[0]?.key || 'paypal');
     }
   }, [activeProvider, providerRows]);
+
+  useEffect(() => {
+    if (
+      requestedProvider &&
+      appliedRequestedProviderRef.current !== requestedProvider &&
+      providerRows.some((provider) => provider.key === requestedProvider)
+    ) {
+      appliedRequestedProviderRef.current = requestedProvider;
+      setActiveProvider(requestedProvider);
+    }
+  }, [providerRows, requestedProvider]);
 
   useEffect(() => {
     setSelectedWebhook(null);

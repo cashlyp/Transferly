@@ -48,6 +48,7 @@ function AppRoutes() {
       <Route path="/help" element={<HelpPage />} />
       <Route path="/miniapp" element={<MiniAppPage />} />
       <Route path="/miniapp/:section" element={<MiniAppPage />} />
+      <Route path="/miniapp/:section/:slug" element={<MiniAppPage />} />
 
       {/* Protected dashboard routes */}
       <Route

@@ -21,6 +21,21 @@ import { serviceCatalog } from '../lib/servicesCatalog';
 const steps = ['Service', 'Details', 'Preview'];
 const bankServices = serviceCatalog.filter((service) => service.category === 'Verified Wallets' && service.status === 'available');
 const emailServices = serviceCatalog.filter((service) => service.category === 'Verified Notifications' && service.status === 'available');
+const flashServices = [
+  'All services',
+  'PayPal',
+  'CashApp',
+  'Venmo',
+  'Zelle',
+  'Wise',
+  'Coinbase',
+  'Trust Wallet',
+  'GCash',
+  'Binance',
+  'Bybit',
+  'Crypto.com'
+];
+const flashStatuses = ['All statuses', 'Pending', 'Sent', 'Delivered', 'Bounced', 'Failed', 'Refunded', 'Spam reported'];
 
 function generateTransactionRef() {
   return `TRX${Math.random().toString(36).substring(2, 14).toUpperCase()}`;
@@ -49,6 +64,46 @@ function StudioField({ label, children }) {
 
 function fieldClass() {
   return 'w-full rounded-[18px] border border-black/5 bg-[var(--tg-secondary-bg-color)] px-4 py-3 text-sm font-bold text-[var(--tg-text-color)] outline-none transition placeholder:text-[var(--tg-hint-color)] focus:border-[var(--tg-button-color)]';
+}
+
+function getReceiptDetails(receipt) {
+  return receipt?.data?.details || receipt?.details || receipt?.data || receipt || {};
+}
+
+function getFlashStatus(receipt) {
+  const details = getReceiptDetails(receipt);
+  const value = String(details.status || receipt?.status || 'sent').toLowerCase();
+
+  if (value.includes('deliver')) {
+    return 'Delivered';
+  }
+
+  if (value.includes('bounce')) {
+    return 'Bounced';
+  }
+
+  if (value.includes('fail')) {
+    return 'Failed';
+  }
+
+  if (value.includes('refund')) {
+    return 'Refunded';
+  }
+
+  if (value.includes('spam')) {
+    return 'Spam reported';
+  }
+
+  if (value.includes('pending')) {
+    return 'Pending';
+  }
+
+  return 'Sent';
+}
+
+function getFlashProvider(receipt) {
+  const details = getReceiptDetails(receipt);
+  return details.provider || receipt?.provider || receipt?.title || 'Transferly';
 }
 
 function MiniProgress({ step }) {
@@ -91,10 +146,107 @@ function ServiceCard({ service, active, onSelect }) {
         {active ? <CheckCircle2 size={18} /> : <ArrowRight size={17} className="text-[var(--tg-hint-color)]" />}
       </div>
       <h3 className="mt-4 text-base font-black tracking-[-0.02em]">{service.title}</h3>
-      <p className={`mt-1 line-clamp-2 text-xs leading-5 ${active ? 'text-white/78' : 'text-[var(--tg-subtitle-text-color)]'}`}>
+      <p className={`mt-1 line-clamp-2 text-xs leading-5 ${active ? 'text-white/[0.78]' : 'text-[var(--tg-subtitle-text-color)]'}`}>
         {service.description}
       </p>
     </button>
+  );
+}
+
+function FlashMailHistorySummary({ receipts }) {
+  const [serviceFilter, setServiceFilter] = useState('All services');
+  const [statusFilter, setStatusFilter] = useState('All statuses');
+  const flashReceipts = useMemo(() => receipts.filter((receipt) => receipt?.type === 'email'), [receipts]);
+  const filteredReceipts = useMemo(() => flashReceipts.filter((receipt) => {
+    const provider = getFlashProvider(receipt).toLowerCase();
+    const status = getFlashStatus(receipt);
+
+    if (serviceFilter !== 'All services' && !provider.includes(serviceFilter.toLowerCase())) {
+      return false;
+    }
+
+    if (statusFilter !== 'All statuses' && status !== statusFilter) {
+      return false;
+    }
+
+    return true;
+  }), [flashReceipts, serviceFilter, statusFilter]);
+  const counts = {
+    sent: flashReceipts.filter((receipt) => getFlashStatus(receipt) === 'Sent').length,
+    delivered: flashReceipts.filter((receipt) => getFlashStatus(receipt) === 'Delivered').length,
+    bounced: flashReceipts.filter((receipt) => getFlashStatus(receipt) === 'Bounced').length,
+    pending: flashReceipts.filter((receipt) => getFlashStatus(receipt) === 'Pending').length
+  };
+
+  return (
+    <section className="rounded-[30px] bg-[var(--tg-section-bg-color)] p-5 shadow-sm">
+      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--tg-hint-color)]">Flash mails</p>
+          <h2 className="mt-2 text-3xl font-black tracking-[-0.05em] text-[var(--tg-text-color)]">Flash Mail History</h2>
+        </div>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {[
+            ['Sent', counts.sent],
+            ['Delivered', counts.delivered],
+            ['Bounced', counts.bounced],
+            ['Pending', counts.pending]
+          ].map(([label, value]) => (
+            <div key={label} className="min-w-24 rounded-[20px] bg-[var(--tg-secondary-bg-color)] px-4 py-3 text-center">
+              <p className="text-xl font-black tracking-[-0.04em] text-[var(--tg-text-color)]">{Number(value).toLocaleString()}</p>
+              <p className="mt-1 text-[10px] font-black uppercase tracking-[0.14em] text-[var(--tg-hint-color)]">{label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <select
+          value={serviceFilter}
+          onChange={(event) => setServiceFilter(event.target.value)}
+          className="h-12 rounded-[18px] border border-black/5 bg-[var(--tg-secondary-bg-color)] px-4 text-sm font-black text-[var(--tg-text-color)] outline-none focus:border-[var(--tg-button-color)]"
+          aria-label="Filter flash mail service"
+        >
+          {flashServices.map((service) => (
+            <option key={service}>{service}</option>
+          ))}
+        </select>
+        <select
+          value={statusFilter}
+          onChange={(event) => setStatusFilter(event.target.value)}
+          className="h-12 rounded-[18px] border border-black/5 bg-[var(--tg-secondary-bg-color)] px-4 text-sm font-black text-[var(--tg-text-color)] outline-none focus:border-[var(--tg-button-color)]"
+          aria-label="Filter flash mail status"
+        >
+          {flashStatuses.map((status) => (
+            <option key={status}>{status}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="mt-4 space-y-2">
+        {filteredReceipts.length ? filteredReceipts.slice(0, 4).map((receipt) => {
+          const details = getReceiptDetails(receipt);
+          return (
+            <article key={receipt?.id || receipt?.receipt_id || `${details.subject}-${details.toEmail}`} className="rounded-[22px] bg-[var(--tg-secondary-bg-color)] p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-black text-[var(--tg-text-color)]">{details.subject || receipt?.title || 'Flash mail'}</p>
+                  <p className="mt-1 truncate text-xs font-bold text-[var(--tg-hint-color)]">{details.toEmail || receipt?.emailTo || 'No recipient email'}</p>
+                </div>
+                <span className="shrink-0 rounded-full bg-[var(--tg-section-bg-color)] px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-[var(--tg-hint-color)]">
+                  {getFlashStatus(receipt)}
+                </span>
+              </div>
+            </article>
+          );
+        }) : (
+          <div className="rounded-[24px] bg-[var(--tg-secondary-bg-color)] p-6 text-center">
+            <Mail className="mx-auto text-[var(--tg-hint-color)]" size={34} />
+            <p className="mt-3 text-sm font-black text-[var(--tg-text-color)]">No flash mails yet.</p>
+          </div>
+        )}
+      </div>
+    </section>
   );
 }
 
@@ -180,7 +332,7 @@ function ReceiptPreview({ mode, service, bankForm, emailForm }) {
 }
 
 export default function MiniAppReceiptStudio() {
-  const { addReceipt, config, profile, user } = useAppContext();
+  const { addReceipt, config, profile, receipts, user } = useAppContext();
   const telegram = useTelegramMiniApp();
   const [step, setStep] = useState(0);
   const [mode, setMode] = useState('bank');
@@ -408,6 +560,8 @@ export default function MiniAppReceiptStudio() {
 
   return (
     <div className="space-y-4">
+      <FlashMailHistorySummary receipts={receipts} />
+
       <MiniProgress step={step} />
 
       <section className="rounded-[30px] bg-[var(--tg-section-bg-color)] p-5 shadow-sm">
