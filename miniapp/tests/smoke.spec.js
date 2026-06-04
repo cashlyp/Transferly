@@ -567,24 +567,28 @@ test('mini app service catalog routes tiles into native service detail screens',
   await expect(page.getByRole('link', { name: /Transfer to bank/i })).toHaveAttribute('href', '/miniapp/wallet?service=paypal');
   await page.getByRole('button', { name: /Manage money/i }).click();
   await expect(page.getByText('Quick access')).toBeVisible();
-  await expect(page.getByRole('link', { name: /Business Tools/i }).first()).toHaveAttribute('href', '/miniapp/ops?provider=paypal');
+  await expect(page.getByRole('link', { name: /Business Tools/i }).first()).toHaveAttribute('href', '/miniapp/services/paypal/settings');
   await expect(page.getByRole('link', { name: /Invoicing/i })).toHaveAttribute('href', '/miniapp/invoices?provider=paypal');
   await expect(page.getByRole('link', { name: /Payment Links & Buttons/i })).toHaveAttribute(
     'href',
-    '/miniapp/studio?type=email&service=paypal&mode=custom-mail'
+    '/miniapp/services/paypal/payment-links'
   );
   await expect(page.getByText('Business Performance')).toBeVisible();
   await expect(page.getByText('All comparisons to previous 30 days')).toBeVisible();
   await expect(page.getByText('Recent activity')).toBeVisible();
   await expect(page.getByText('Customer account')).toBeVisible();
   await expect(page.getByText('Create a Payment Link')).toBeVisible();
-  await expect(page.getByRole('link', { name: /Build It/i })).toHaveAttribute(
-    'href',
-    '/miniapp/studio?type=email&service=paypal&mode=custom-mail'
-  );
+  await page.getByRole('button', { name: /Build It/i }).click();
+  await expect(page.getByText('Enter a product or service name.')).toBeVisible();
+  await expect(page.getByText('Enter an amount greater than 0.')).toBeVisible();
+  await page.getByLabel('Product or service name').fill('Premium service');
+  await page.getByLabel('Price').fill('25.50');
+  await page.getByRole('button', { name: /Build It/i }).click();
+  await expect(page.getByText('Payment link is ready')).toBeVisible();
+  await expect(page.getByText('transferly-paypal://usd/Premium%20service-25.50')).toBeVisible();
   await expect(page.getByRole('link', { name: /Customize/i })).toHaveAttribute(
     'href',
-    '/miniapp/studio?type=email&service=paypal&mode=deposit-mail'
+    '/miniapp/services/paypal/mail?mode=custom-mail'
   );
 
   await page.getByRole('button', { name: /Menu/i }).click();
@@ -593,15 +597,15 @@ test('mini app service catalog routes tiles into native service detail screens',
   await page.getByRole('button', { name: /Create/i }).click();
   await expect(page.getByRole('link', { name: /Payment Link or Button/i })).toHaveAttribute(
     'href',
-    '/miniapp/studio?type=email&service=paypal&mode=custom-mail'
+    '/miniapp/services/paypal/payment-links'
   );
   await expect(page.getByRole('link', { name: /Custom Mail/i })).toHaveAttribute(
     'href',
-    '/miniapp/studio?type=email&service=paypal&mode=custom-mail'
+    '/miniapp/services/paypal/mail?mode=custom-mail'
   );
   await expect(page.getByRole('link', { name: /Deposit Mail/i })).toHaveAttribute(
     'href',
-    '/miniapp/studio?type=email&service=paypal&mode=deposit-mail'
+    '/miniapp/services/paypal/mail?mode=deposit-mail'
   );
   await expect(page.getByRole('link', { name: /Mail History/i })).toHaveAttribute('href', '/miniapp/vault?service=paypal');
   await expect(page.getByRole('link', { name: /API credentials/i })).toHaveAttribute('href', '/miniapp/ops?provider=paypal');
@@ -634,6 +638,11 @@ test('mini app route audit stays nonblank and responsive across core screens', a
     '/miniapp',
     '/miniapp/services',
     '/miniapp/services/paypal',
+    '/miniapp/services/paypal/activity',
+    '/miniapp/services/paypal/payment-links',
+    '/miniapp/services/paypal/mail?mode=custom-mail',
+    '/miniapp/services/paypal/mail?mode=deposit-mail',
+    '/miniapp/services/paypal/settings',
     '/miniapp/studio',
     '/miniapp/invoices',
     '/miniapp/payouts',

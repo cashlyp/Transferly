@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   Activity,
@@ -225,10 +225,10 @@ const miniAppMailServiceSlugs = new Set([
   'gcash'
 ]);
 
-const paypalSandboxQuickAccessItems = [
+const paypalWalletQuickAccessItems = [
   {
     label: 'Business Tools',
-    to: '/miniapp/ops?provider=paypal',
+    to: '/miniapp/services/paypal/settings',
     icon: Layers3
   },
   {
@@ -238,7 +238,7 @@ const paypalSandboxQuickAccessItems = [
   },
   {
     label: 'Request money',
-    to: '/miniapp/studio?type=email&service=paypal&mode=deposit-mail',
+    to: '/miniapp/services/paypal/mail',
     icon: CreditCard
   },
   {
@@ -248,7 +248,7 @@ const paypalSandboxQuickAccessItems = [
   },
   {
     label: 'PayPal.Me',
-    to: '/miniapp/clients?provider=paypal',
+    to: '/miniapp/services/paypal/settings',
     icon: UserRound
   },
   {
@@ -263,7 +263,7 @@ const paypalSandboxQuickAccessItems = [
   },
   {
     label: 'Payment Links & Buttons',
-    to: '/miniapp/studio?type=email&service=paypal&mode=custom-mail',
+    to: '/miniapp/services/paypal/payment-links',
     icon: Copy
   },
   {
@@ -273,23 +273,23 @@ const paypalSandboxQuickAccessItems = [
   },
   {
     label: 'Store Sync',
-    to: '/miniapp/vault?service=paypal',
+    to: '/miniapp/services/paypal/activity',
     icon: History
   }
 ];
 
-const paypalSandboxMailTasks = [
+const paypalWalletMailTasks = [
   {
     label: 'Custom Mail',
     body: 'Build PayPal flash mail with custom recipient, amount, note, and delivery context.',
-    to: '/miniapp/studio?type=email&service=paypal&mode=custom-mail',
+    to: '/miniapp/services/paypal/mail?mode=custom-mail',
     icon: FileText,
     badge: 'Flash'
   },
   {
     label: 'Deposit Mail',
-    body: 'Prepare a sandbox deposit notification path with PayPal-specific payment and funding fields.',
-    to: '/miniapp/studio?type=email&service=paypal&mode=deposit-mail',
+    body: 'Prepare a deposit notification path with PayPal-specific payment and funding fields.',
+    to: '/miniapp/services/paypal/mail?mode=deposit-mail',
     icon: CreditCard,
     badge: 'Deposit'
   },
@@ -309,53 +309,81 @@ const paypalSandboxMailTasks = [
   }
 ];
 
-const paypalSandboxPerformanceCards = [
-  { label: 'Total sales volume', to: '/miniapp/analytics?provider=paypal&metric=sales-volume' },
-  { label: 'Average order value', to: '/miniapp/analytics?provider=paypal&metric=orders' },
-  { label: 'Total customers', to: '/miniapp/analytics?provider=paypal&metric=customers' },
-  { label: 'Total sales count', to: '/miniapp/analytics?provider=paypal&metric=sales-count' }
+const paypalWalletPerformanceCards = [
+  { label: 'Total sales volume', value: '$11,500.00', trend: '+12%', to: '/miniapp/analytics?provider=paypal&metric=sales-volume' },
+  { label: 'Average order value', value: '$287.50', trend: '+4%', to: '/miniapp/analytics?provider=paypal&metric=orders' },
+  { label: 'Total customers', value: '42', trend: '+8', to: '/miniapp/analytics?provider=paypal&metric=customers' },
+  { label: 'Total sales count', value: '40', trend: '+6', to: '/miniapp/analytics?provider=paypal&metric=sales-count' }
 ];
 
-const paypalSandboxActivityRows = [
-  { date: '5/14/26, 4:00 PM', type: 'Payment to', name: 'Customer account', amount: '$1,000.00 USD' },
-  { date: '5/4/26, 7:23 AM', type: 'Payment to', name: 'Recipient account', amount: '$550.00 USD' },
-  { date: '5/4/26, 7:01 AM', type: 'Withdraw from', name: 'Bank Account', amount: '$500.00 USD' },
-  { date: '5/4/26, 7:00 AM', type: 'Transfer to', name: 'Bank Account', amount: '$500.00 USD' }
+const paypalWalletActivityRows = [
+  { id: 'act-1000', date: '5/14/26, 4:00 PM', type: 'Payment to', name: 'Customer account', amount: '$1,000.00 USD', status: 'Completed', category: 'payments', note: 'Payment link checkout captured and available in balance.' },
+  { id: 'act-550', date: '5/4/26, 7:23 AM', type: 'Payment to', name: 'Recipient account', amount: '$550.00 USD', status: 'Pending', category: 'payments', note: 'Recipient payment is being reviewed before release.' },
+  { id: 'act-withdraw-500', date: '5/4/26, 7:01 AM', type: 'Withdraw from', name: 'Bank Account', amount: '$500.00 USD', status: 'Completed', category: 'bank', note: 'Bank withdrawal settled to the linked operating account.' },
+  { id: 'act-transfer-500', date: '5/4/26, 7:00 AM', type: 'Transfer to', name: 'Bank Account', amount: '$500.00 USD', status: 'Completed', category: 'bank', note: 'Balance transfer created from the wallet dashboard.' }
 ];
 
-const paypalSandboxDeveloperTasks = [
-  { label: 'API credentials', to: '/miniapp/ops?provider=paypal', detail: 'Sandbox client status and setup checks' },
+const paypalWalletDeveloperTasks = [
+  { label: 'API credentials', to: '/miniapp/ops?provider=paypal', detail: 'Client status and setup checks' },
   { label: 'Webhooks', to: '/miniapp/ops?provider=paypal', detail: 'Delivery health, replay, and dead-letter recovery' },
   { label: 'Invoices', to: '/miniapp/invoices?provider=paypal', detail: 'Create, remind, and reconcile PayPal invoices' },
-  { label: 'Payouts', to: '/miniapp/payouts?provider=paypal', detail: 'Review and release sandbox payout requests' }
+  { label: 'Payouts', to: '/miniapp/payouts?provider=paypal', detail: 'Review and release payout requests' }
 ];
 
-const paypalSandboxMenuItems = [
+const paypalWalletMenuItems = [
   { label: 'Home', to: '/miniapp/services/paypal', icon: Gauge },
-  { label: 'Activity', to: '/miniapp/activity?provider=paypal', icon: Activity, hasPanel: true },
-  { label: 'Sales', to: '/miniapp/analytics?provider=paypal&view=sales', icon: BarChart3, hasPanel: true },
+  { label: 'Activity', to: '/miniapp/services/paypal/activity', icon: Activity, hasPanel: true },
+  { label: 'Sales', to: '/miniapp/services/paypal/activity', icon: BarChart3, hasPanel: true },
   { label: 'Finance', to: '/miniapp/wallet?service=paypal', icon: WalletCards, hasPanel: true },
-  { label: 'Operations', to: '/miniapp/ops?provider=paypal', icon: ShieldCheck, hasPanel: true },
-  { label: 'Pay & Get Paid', to: '/miniapp/studio?type=email&service=paypal&mode=custom-mail', icon: Send, hasPanel: true },
+  { label: 'Operations', to: '/miniapp/services/paypal/settings', icon: ShieldCheck, hasPanel: true },
+  { label: 'Pay & Get Paid', to: '/miniapp/services/paypal/payment-links', icon: Send, hasPanel: true },
   { label: 'Business Tools', to: '/miniapp/ops?provider=paypal', icon: Sparkles },
   { label: 'Developer', to: '/miniapp/ops?provider=paypal', icon: ShieldCheck },
   { label: 'Profile', to: '/miniapp/profile', icon: UserRound },
-  { label: 'Settings', to: '/miniapp/settings', icon: Settings },
-  { label: 'Message Center (0)', to: '/miniapp/notifications', icon: Bell },
+  { label: 'Settings', to: '/miniapp/services/paypal/settings', icon: Settings },
+  { label: 'Message Center (0)', to: '/miniapp/services/paypal/activity', icon: Bell },
   { label: 'Help', to: '/miniapp/support', icon: LifeBuoy },
   { label: 'Log out', to: '/miniapp', icon: ArrowLeft }
 ];
 
-const paypalSandboxCreateItems = [
-  { label: 'P2P Request', to: '/miniapp/studio?type=email&service=paypal&mode=custom-mail', icon: UserRound },
+const paypalWalletMenuPanels = {
+  Activity: [
+    { label: 'All transactions', to: '/miniapp/services/paypal/activity' },
+    { label: 'Statements', to: '/miniapp/services/paypal/activity?view=statements' },
+    { label: 'Disputes', to: '/miniapp/services/paypal/activity?view=disputes' }
+  ],
+  Sales: [
+    { label: 'Sales insights', to: '/miniapp/services/paypal/activity?view=sales' },
+    { label: 'Customer list', to: '/miniapp/clients?provider=paypal' },
+    { label: 'Reports', to: '/miniapp/analytics?provider=paypal&view=sales' }
+  ],
+  Finance: [
+    { label: 'Balance', to: '/miniapp/services/paypal' },
+    { label: 'Banks and cards', to: '/miniapp/wallet?service=paypal' },
+    { label: 'Currencies', to: '/miniapp/ops?provider=paypal' }
+  ],
+  Operations: [
+    { label: 'Business setup', to: '/miniapp/services/paypal/settings' },
+    { label: 'Provider health', to: '/miniapp/ops?provider=paypal' },
+    { label: 'Security checks', to: '/miniapp/security?provider=paypal' }
+  ],
+  'Pay & Get Paid': [
+    { label: 'Payment links', to: '/miniapp/services/paypal/payment-links' },
+    { label: 'Custom mail', to: '/miniapp/services/paypal/mail?mode=custom-mail' },
+    { label: 'Deposit mail', to: '/miniapp/services/paypal/mail?mode=deposit-mail' }
+  ]
+};
+
+const paypalWalletCreateItems = [
+  { label: 'P2P Request', to: '/miniapp/services/paypal/mail?mode=custom-mail', icon: UserRound },
   { label: 'Invoice', to: '/miniapp/invoices?provider=paypal', icon: Receipt },
-  { label: 'Payment Link or Button', to: '/miniapp/studio?type=email&service=paypal&mode=custom-mail', icon: Copy },
-  { label: 'QR Code', to: '/miniapp/studio?type=email&service=paypal&mode=custom-mail&format=qr', icon: Smartphone },
+  { label: 'Payment Link or Button', to: '/miniapp/services/paypal/payment-links', icon: Copy },
+  { label: 'QR Code', to: '/miniapp/services/paypal/payment-links?format=qr', icon: Smartphone },
   { label: 'P2P Payment', to: '/miniapp/payouts?provider=paypal', icon: Send },
   { label: 'Transfer to Bank', to: '/miniapp/wallet?service=paypal', icon: CreditCard }
 ];
 
-const paypalSandboxFooterLinks = [
+const paypalWalletFooterLinks = [
   'Help',
   'Contact',
   'Sitemap',
@@ -366,7 +394,7 @@ const paypalSandboxFooterLinks = [
   'Partners'
 ];
 
-const paypalSandboxLanguageLinks = ['English'];
+const paypalWalletLanguageLinks = ['English'];
 
 const launchSteps = [
   {
@@ -1088,13 +1116,150 @@ function ServicesSection() {
   );
 }
 
-function MiniAppPayPalSandboxServicePage({ service }) {
+function MiniAppPayPalWalletServicePage({ service }) {
+  const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [createMenuOpen, setCreateMenuOpen] = useState(false);
   const [moneyMenuOpen, setMoneyMenuOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [activeMenuPanel, setActiveMenuPanel] = useState('');
+  const [performanceStatus, setPerformanceStatus] = useState('error');
+  const [activityFilter, setActivityFilter] = useState('all');
+  const [selectedActivity, setSelectedActivity] = useState(null);
+  const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
+  const [paymentLinkForm, setPaymentLinkForm] = useState({ name: '', price: '', currency: 'USD' });
+  const [paymentLinkErrors, setPaymentLinkErrors] = useState({});
+  const [paymentLinkStatus, setPaymentLinkStatus] = useState('idle');
+  const menuRef = useRef(null);
+  const quickAccessRef = useRef(null);
+  const performanceRef = useRef(null);
+  const retryTimerRef = useRef(null);
+  const paymentTimerRef = useRef(null);
   const customMailTarget = '/miniapp/studio?type=email&service=paypal&mode=custom-mail';
   const depositMailTarget = '/miniapp/studio?type=email&service=paypal&mode=deposit-mail';
   const providerTarget = '/miniapp/ops?provider=paypal';
+  const paypalSubpage = useMemo(() => {
+    const [, , , subpage = 'overview'] = location.pathname.split('/').filter(Boolean);
+    return subpage || 'overview';
+  }, [location.pathname]);
+  const paypalSubpageTitle = {
+    overview: 'Account overview',
+    activity: 'Activity',
+    'payment-links': 'Payment Links & Buttons',
+    mail: 'Mail tools',
+    settings: 'Account settings'
+  }[paypalSubpage] || 'Account overview';
+  const activityRows = useMemo(() => (
+    activityFilter === 'all'
+      ? paypalWalletActivityRows
+      : paypalWalletActivityRows.filter((row) => row.category === activityFilter)
+  ), [activityFilter]);
+  const paypalMailMode = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    return params.get('mode') || 'custom-mail';
+  }, [location.search]);
+  const generatedPaymentLink = paymentLinkForm.name.trim() && paymentLinkForm.price.trim()
+    ? `transferly-paypal://${paymentLinkForm.currency.toLowerCase()}/${encodeURIComponent(paymentLinkForm.name.trim())}-${paymentLinkForm.price.trim()}`
+    : 'transferly-paypal://payment-link/new';
+
+  useEffect(() => {
+    setMenuOpen(false);
+    setCreateMenuOpen(false);
+    setMoneyMenuOpen(false);
+    setNotificationsOpen(false);
+    setActiveMenuPanel('');
+    setLanguageMenuOpen(false);
+  }, [location.pathname, location.search]);
+
+  useEffect(() => () => {
+    window.clearTimeout(retryTimerRef.current);
+    window.clearTimeout(paymentTimerRef.current);
+  }, []);
+
+  useEffect(() => {
+    if (!menuOpen) {
+      return undefined;
+    }
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setMenuOpen(false);
+        setCreateMenuOpen(false);
+        setActiveMenuPanel('');
+      }
+    };
+
+    const handlePointerDown = (event) => {
+      if (event.target.closest?.('[data-paypal-menu-control="true"]')) {
+        return;
+      }
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuOpen(false);
+        setCreateMenuOpen(false);
+        setActiveMenuPanel('');
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('pointerdown', handlePointerDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('pointerdown', handlePointerDown);
+    };
+  }, [menuOpen]);
+
+  const scrollStrip = (ref, direction) => {
+    ref.current?.scrollBy({ left: direction * 260, behavior: 'smooth' });
+  };
+
+  const retryPerformance = () => {
+    setPerformanceStatus('loading');
+    window.clearTimeout(retryTimerRef.current);
+    retryTimerRef.current = window.setTimeout(() => {
+      setPerformanceStatus('loaded');
+    }, 450);
+  };
+
+  const updatePaymentLinkField = (field, value) => {
+    setPaymentLinkForm((current) => ({ ...current, [field]: value }));
+    setPaymentLinkErrors((current) => ({ ...current, [field]: '' }));
+    setPaymentLinkStatus('idle');
+  };
+
+  const buildPaymentLink = (event) => {
+    event.preventDefault();
+
+    const errors = {};
+    const numericPrice = Number(paymentLinkForm.price);
+    if (!paymentLinkForm.name.trim()) {
+      errors.name = 'Enter a product or service name.';
+    }
+    if (!paymentLinkForm.price.trim() || Number.isNaN(numericPrice) || numericPrice <= 0) {
+      errors.price = 'Enter an amount greater than 0.';
+    }
+
+    if (Object.keys(errors).length) {
+      setPaymentLinkErrors(errors);
+      setPaymentLinkStatus('error');
+      return;
+    }
+
+    setPaymentLinkStatus('building');
+    window.clearTimeout(paymentTimerRef.current);
+    paymentTimerRef.current = window.setTimeout(() => {
+      setPaymentLinkStatus('success');
+    }, 500);
+  };
+
+  const copyGeneratedPaymentLink = async () => {
+    try {
+      await navigator.clipboard?.writeText(generatedPaymentLink);
+      toast.success('Payment link copied');
+    } catch {
+      toast.success('Payment link ready');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white text-[#0c0c0d]">
@@ -1106,30 +1271,51 @@ function MiniAppPayPalSandboxServicePage({ service }) {
             <span className="text-[22px] font-bold text-[#2c2e2f]">Business Wallet</span>
           </Link>
 
-          <div className="flex items-center gap-2 sm:gap-4">
+          <div className="relative flex items-center gap-2 sm:gap-4">
             <button
               type="button"
+              onClick={() => setNotificationsOpen((open) => !open)}
               className="relative grid h-11 w-11 place-items-center rounded-full text-[#2c2e2f] transition hover:bg-[#f5f7fa] active:scale-95"
               aria-label="Notifications 0"
+              aria-expanded={notificationsOpen}
+              aria-controls="paypal-notifications-popover"
             >
               <Bell size={21} strokeWidth={2.2} />
               <span className="absolute right-1 top-1 grid h-5 min-w-5 place-items-center rounded-full bg-[#0070e0] px-1 text-[11px] font-bold text-white">
                 0
               </span>
             </button>
+            {notificationsOpen ? (
+              <div
+                id="paypal-notifications-popover"
+                className="absolute right-0 top-[52px] z-50 w-[min(88vw,340px)] rounded-xl border border-[#d6d9dc] bg-white p-4 text-left shadow-[0_18px_42px_rgba(0,0,0,0.16)]"
+                role="status"
+              >
+                <p className="text-base font-bold text-[#0c0c0d]">Notifications</p>
+                <div className="mt-4 rounded-lg border border-dashed border-[#c6cbd1] bg-[#f7f9fa] px-4 py-5 text-center">
+                  <Bell size={22} className="mx-auto text-[#687173]" />
+                  <p className="mt-2 text-sm font-bold text-[#2c2e2f]">You are all caught up.</p>
+                  <p className="mt-1 text-xs font-semibold leading-5 text-[#687173]">
+                    New payment, link, and mail updates will appear here.
+                  </p>
+                </div>
+              </div>
+            ) : null}
             <button
               type="button"
+              data-paypal-menu-control="true"
               onClick={() => {
                 setMenuOpen((open) => {
                   if (open) {
                     setCreateMenuOpen(false);
+                    setActiveMenuPanel('');
                   }
                   return !open;
                 });
               }}
               className="inline-flex h-11 items-center gap-2 rounded-full border border-[#c6cbd1] px-4 text-sm font-bold text-[#003087] transition hover:border-[#003087] hover:bg-[#f5f7fa] active:scale-95"
               aria-expanded={menuOpen}
-              aria-controls="paypal-sandbox-menu"
+              aria-controls="paypal-wallet-menu"
             >
               Menu
               <ChevronDown size={16} className={menuOpen ? 'rotate-180 transition' : 'transition'} />
@@ -1141,7 +1327,8 @@ function MiniAppPayPalSandboxServicePage({ service }) {
           <div className="absolute left-0 right-0 top-[76px] z-50 px-4 sm:px-6">
             <div className="mx-auto flex max-w-[1180px] justify-end">
               <div
-                id="paypal-sandbox-menu"
+                ref={menuRef}
+                id="paypal-wallet-menu"
                 className="relative max-h-[calc(100vh-96px)] w-full max-w-[410px] overflow-y-auto rounded-b-2xl border border-t-0 border-[#d6d9dc] bg-white p-2 shadow-[0_18px_45px_rgba(0,0,0,0.18)]"
               >
                 <button
@@ -1149,7 +1336,7 @@ function MiniAppPayPalSandboxServicePage({ service }) {
                   onClick={() => setCreateMenuOpen((open) => !open)}
                   className="flex w-full items-center justify-between rounded-lg px-4 py-3 text-left text-[15px] font-bold text-[#0c0c0d] transition hover:bg-[#f5f7fa]"
                   aria-expanded={createMenuOpen}
-                  aria-controls="paypal-sandbox-create-menu"
+                  aria-controls="paypal-wallet-create-menu"
                 >
                   <span className="inline-flex items-center gap-3">
                     <span className="grid h-8 w-8 place-items-center rounded-full bg-[#eef6ff] text-[#0070e0]">
@@ -1162,10 +1349,10 @@ function MiniAppPayPalSandboxServicePage({ service }) {
 
                 {createMenuOpen ? (
                   <div
-                    id="paypal-sandbox-create-menu"
+                    id="paypal-wallet-create-menu"
                     className="mb-2 rounded-xl border border-[#e0e3e7] bg-white p-2 shadow-[0_12px_28px_rgba(0,0,0,0.12)] sm:absolute sm:right-full sm:top-2 sm:mr-3 sm:w-72"
                   >
-                    {paypalSandboxCreateItems.map((item) => {
+                    {paypalWalletCreateItems.map((item) => {
                       const Icon = item.icon;
                       return (
                         <Link
@@ -1182,8 +1369,47 @@ function MiniAppPayPalSandboxServicePage({ service }) {
                 ) : null}
 
                 <nav className="mt-1 grid gap-0.5" aria-label="PayPal service navigation">
-                  {paypalSandboxMenuItems.map((item) => {
+                  {paypalWalletMenuItems.map((item) => {
                     const Icon = item.icon;
+                    const panelItems = paypalWalletMenuPanels[item.label] || [];
+                    if (item.hasPanel) {
+                      return (
+                        <div key={item.label} className="rounded-lg">
+                          <button
+                            type="button"
+                            onClick={() => setActiveMenuPanel((panel) => (panel === item.label ? '' : item.label))}
+                            className="flex w-full items-center justify-between rounded-lg px-4 py-3 text-left text-[15px] font-bold text-[#0c0c0d] transition hover:bg-[#f5f7fa]"
+                            aria-expanded={activeMenuPanel === item.label}
+                          >
+                            <span className="inline-flex min-w-0 items-center gap-3">
+                              <Icon size={18} className="shrink-0 text-[#687173]" />
+                              <span className="truncate">{item.label}</span>
+                            </span>
+                            <ChevronDown size={16} className={activeMenuPanel === item.label ? 'rotate-180 text-[#687173] transition' : 'text-[#687173] transition'} />
+                          </button>
+                          {activeMenuPanel === item.label ? (
+                            <div className="ml-11 mr-2 grid gap-1 border-l border-[#e0e3e7] py-1 pl-3">
+                              <Link
+                                to={item.to}
+                                className="rounded-md px-3 py-2 text-sm font-bold text-[#003087] transition hover:bg-[#f5f7fa]"
+                              >
+                                {item.label} overview
+                              </Link>
+                              {panelItems.map((panelItem) => (
+                                <Link
+                                  key={panelItem.label}
+                                  to={panelItem.to}
+                                  className="rounded-md px-3 py-2 text-sm font-semibold text-[#2c2e2f] transition hover:bg-[#f5f7fa] hover:text-[#003087]"
+                                >
+                                  {panelItem.label}
+                                </Link>
+                              ))}
+                            </div>
+                          ) : null}
+                        </div>
+                      );
+                    }
+
                     return (
                       <Link
                         key={item.label}
@@ -1194,7 +1420,6 @@ function MiniAppPayPalSandboxServicePage({ service }) {
                           <Icon size={18} className="shrink-0 text-[#687173]" />
                           <span className="truncate">{item.label}</span>
                         </span>
-                        {item.hasPanel ? <ArrowRight size={16} className="text-[#687173]" /> : null}
                       </Link>
                     );
                   })}
@@ -1202,7 +1427,7 @@ function MiniAppPayPalSandboxServicePage({ service }) {
 
                 <div className="mt-2 border-t border-[#e0e3e7] pt-2">
                   <p className="px-4 py-2 text-[12px] font-bold text-[#687173]">Transferly service tools</p>
-                  {paypalSandboxMailTasks.map((task) => (
+                  {paypalWalletMailTasks.map((task) => (
                     <Link
                       key={task.label}
                       to={task.to}
@@ -1217,7 +1442,7 @@ function MiniAppPayPalSandboxServicePage({ service }) {
                 </div>
 
                 <div className="mt-2 border-t border-[#e0e3e7] pt-2">
-                  {paypalSandboxDeveloperTasks.map((task) => (
+                  {paypalWalletDeveloperTasks.map((task) => (
                     <Link
                       key={task.label}
                       to={task.to}
@@ -1241,19 +1466,22 @@ function MiniAppPayPalSandboxServicePage({ service }) {
       </header>
 
       <main className="mx-auto max-w-[1180px] px-4 py-8 sm:px-6 lg:py-10">
-        <section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="min-w-0">
-            <div className="relative">
-              <div className="flex flex-wrap items-start justify-between gap-5">
-                <div>
+        <section className="grid min-w-0 gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="w-full min-w-0 max-w-full overflow-hidden">
+            <div className="relative w-full min-w-0 max-w-full">
+              <div className="flex w-full min-w-0 flex-wrap items-start justify-between gap-5">
+                <div className="min-w-0">
                   <div className="flex items-end gap-3">
                     <h1 className="text-[44px] font-bold leading-none text-[#0c0c0d] sm:text-[54px]">$5,000.00</h1>
                     <p className="pb-1 text-2xl font-bold text-[#0c0c0d]">USD</p>
                   </div>
                   <p className="mt-3 text-[15px] font-semibold text-[#687173]">Available balance</p>
+                  <p className="mt-2 inline-flex rounded-full bg-[#eef6ff] px-3 py-1 text-[12px] font-bold text-[#003087]">
+                    {paypalSubpageTitle}
+                  </p>
                 </div>
 
-                <div className="relative">
+                <div className="relative min-w-0">
                   <button
                     type="button"
                     onClick={() => setMoneyMenuOpen((open) => !open)}
@@ -1272,7 +1500,7 @@ function MiniAppPayPalSandboxServicePage({ service }) {
                       <Link to={providerTarget} className="block rounded-lg px-3 py-2 text-sm font-bold text-[#003087] hover:bg-[#f5f7fa]">
                         Manage currencies
                       </Link>
-                      <Link to="/miniapp/activity?provider=paypal" className="block rounded-lg px-3 py-2 text-sm font-bold text-[#003087] hover:bg-[#f5f7fa]">
+                      <Link to="/miniapp/services/paypal/activity" className="block rounded-lg px-3 py-2 text-sm font-bold text-[#003087] hover:bg-[#f5f7fa]">
                         View activity
                       </Link>
                     </div>
@@ -1281,16 +1509,25 @@ function MiniAppPayPalSandboxServicePage({ service }) {
               </div>
             </div>
 
-            <section className="mt-12">
-              <div className="flex items-center justify-between gap-3">
+            <section className="mt-12 min-w-0">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <h2 className="text-2xl font-bold text-[#0c0c0d]">Quick access</h2>
                 <button type="button" className="inline-flex items-center gap-2 text-sm font-bold text-[#0070e0] hover:underline">
                   <Settings size={16} />
                   Edit your quick links
                 </button>
               </div>
-              <div className="mt-5 flex gap-4 overflow-x-auto pb-3" aria-label="Quick access">
-                {paypalSandboxQuickAccessItems.map((item) => {
+              <div className="mt-5 flex max-w-full items-center gap-3 overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => scrollStrip(quickAccessRef, -1)}
+                  className="hidden h-11 w-11 shrink-0 place-items-center rounded-full border border-[#d6d9dc] text-[#003087] transition hover:bg-[#f5f7fa] md:grid"
+                  aria-label="Scroll quick access left"
+                >
+                  <ArrowLeft size={17} />
+                </button>
+                <div ref={quickAccessRef} className="flex min-w-0 flex-1 gap-4 overflow-x-auto pb-3" aria-label="Quick access">
+                {paypalWalletQuickAccessItems.map((item) => {
                   const Icon = item.icon;
                   return (
                     <Link
@@ -1305,9 +1542,11 @@ function MiniAppPayPalSandboxServicePage({ service }) {
                     </Link>
                   );
                 })}
+                </div>
                 <button
                   type="button"
-                  className="my-auto grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[#d6d9dc] text-[#003087] transition hover:bg-[#f5f7fa]"
+                  onClick={() => scrollStrip(quickAccessRef, 1)}
+                  className="my-auto hidden h-11 w-11 shrink-0 place-items-center rounded-full border border-[#d6d9dc] text-[#003087] transition hover:bg-[#f5f7fa] md:grid"
                   aria-label="Scroll quick access right"
                 >
                   <ArrowRight size={17} />
@@ -1315,7 +1554,7 @@ function MiniAppPayPalSandboxServicePage({ service }) {
               </div>
             </section>
 
-            <section className="mt-10">
+            <section className="mt-10 min-w-0">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <h2 className="text-2xl font-bold text-[#0c0c0d]">Business Performance</h2>
@@ -1325,28 +1564,55 @@ function MiniAppPayPalSandboxServicePage({ service }) {
                   View more
                 </Link>
               </div>
-              <div className="mt-5 flex gap-4 overflow-x-auto pb-3">
-                {paypalSandboxPerformanceCards.map((card) => (
+              <div className="mt-5 flex max-w-full items-center gap-3 overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => scrollStrip(performanceRef, -1)}
+                  className="hidden h-11 w-11 shrink-0 place-items-center rounded-full border border-[#d6d9dc] text-[#003087] transition hover:bg-[#f5f7fa] md:grid"
+                  aria-label="Scroll business performance left"
+                >
+                  <ArrowLeft size={17} />
+                </button>
+                <div ref={performanceRef} className="flex min-w-0 flex-1 gap-4 overflow-x-auto pb-3">
+                {paypalWalletPerformanceCards.map((card) => (
                     <article key={card.label} className="min-h-[154px] w-[230px] shrink-0 rounded-xl border border-[#e0e3e7] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.06)]">
                       <Link to={card.to} className="text-sm font-bold leading-5 text-[#003087] hover:underline">
                         {card.label}
                       </Link>
-                      <div className="mt-4 flex items-start gap-2 rounded-lg bg-[#fff7f5] p-3 text-[#8f2b0f]" role="alert">
-                        <AlertCircle size={17} className="mt-0.5 shrink-0" />
-                        <p className="text-[13px] font-semibold leading-5">Something went wrong, please try again later</p>
-                      </div>
-                      <button
-                        type="button"
-                        className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-[#0070e0] transition hover:underline active:scale-95"
-                      >
-                        <RefreshCw size={14} />
-                        Retry
-                      </button>
+                      {performanceStatus === 'loaded' ? (
+                        <div className="mt-4">
+                          <p className="text-2xl font-bold text-[#0c0c0d]">{card.value}</p>
+                          <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-[#e8f8f0] px-2 py-1 text-[12px] font-bold text-[#137333]">
+                            <CheckCircle2 size={13} />
+                            {card.trend} from previous 30 days
+                          </p>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="mt-4 flex items-start gap-2 rounded-lg bg-[#fff7f5] p-3 text-[#8f2b0f]" role="alert">
+                            <AlertCircle size={17} className="mt-0.5 shrink-0" />
+                            <p className="text-[13px] font-semibold leading-5">
+                              {performanceStatus === 'loading' ? 'Refreshing performance data...' : 'Something went wrong, please try again later'}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={retryPerformance}
+                            disabled={performanceStatus === 'loading'}
+                            className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-[#0070e0] transition hover:underline active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            <RefreshCw size={14} className={performanceStatus === 'loading' ? 'animate-spin' : ''} />
+                            Retry
+                          </button>
+                        </>
+                      )}
                     </article>
                 ))}
+                </div>
                 <button
                   type="button"
-                  className="my-auto grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[#d6d9dc] text-[#003087] transition hover:bg-[#f5f7fa]"
+                  onClick={() => scrollStrip(performanceRef, 1)}
+                  className="my-auto hidden h-11 w-11 shrink-0 place-items-center rounded-full border border-[#d6d9dc] text-[#003087] transition hover:bg-[#f5f7fa] md:grid"
                   aria-label="Scroll business performance right"
                 >
                   <ArrowRight size={17} />
@@ -1354,33 +1620,95 @@ function MiniAppPayPalSandboxServicePage({ service }) {
               </div>
             </section>
 
-            <section className="mt-10">
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="text-2xl font-bold text-[#0c0c0d]">Recent activity</h2>
-                <Link to="/miniapp/activity?provider=paypal" className="text-sm font-bold text-[#0070e0] hover:underline">
+            <section className="mt-10 min-w-0">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-2xl font-bold text-[#0c0c0d]">Recent activity</h2>
+                  <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="Activity filters">
+                    {[
+                      { id: 'all', label: 'All' },
+                      { id: 'payments', label: 'Payments' },
+                      { id: 'bank', label: 'Bank' }
+                    ].map((filter) => (
+                      <button
+                        key={filter.id}
+                        type="button"
+                        onClick={() => {
+                          setActivityFilter(filter.id);
+                          setSelectedActivity(null);
+                        }}
+                        className={`rounded-full border px-3 py-1.5 text-xs font-bold transition ${
+                          activityFilter === filter.id
+                            ? 'border-[#0070e0] bg-[#eef6ff] text-[#003087]'
+                            : 'border-[#d6d9dc] text-[#687173] hover:border-[#0070e0] hover:text-[#003087]'
+                        }`}
+                        aria-pressed={activityFilter === filter.id}
+                      >
+                        {filter.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <Link to="/miniapp/services/paypal/activity" className="text-sm font-bold text-[#0070e0] hover:underline">
                   View Activity
                 </Link>
               </div>
-              <div className="mt-4 overflow-hidden rounded-xl border border-[#e0e3e7] bg-white">
+              <div className="mt-4 overflow-x-auto overflow-y-hidden rounded-xl border border-[#e0e3e7] bg-white">
                 <table className="w-full min-w-[680px] border-separate border-spacing-0 text-left text-sm">
                   <tbody>
-                    {paypalSandboxActivityRows.map((row) => (
-                      <tr key={`${row.date}-${row.type}-${row.amount}`} className="font-semibold text-[#0c0c0d] transition hover:bg-[#f8f9fb]">
+                    {activityRows.map((row) => (
+                      <tr
+                        key={row.id}
+                        onClick={() => setSelectedActivity(row)}
+                        className="cursor-pointer font-semibold text-[#0c0c0d] transition hover:bg-[#f8f9fb]"
+                      >
                         <td className="border-b border-[#edf0f2] px-5 py-4 text-[#687173]">{row.date}</td>
                         <td className="border-b border-[#edf0f2] px-5 py-4">{row.type}</td>
                         <td className="border-b border-[#edf0f2] px-5 py-4">{row.name}</td>
+                        <td className="border-b border-[#edf0f2] px-5 py-4">
+                          <span className={`rounded-full px-2 py-1 text-[11px] font-bold ${
+                            row.status === 'Completed' ? 'bg-[#e8f8f0] text-[#137333]' : 'bg-[#fff6e5] text-[#8a5300]'
+                          }`}>
+                            {row.status}
+                          </span>
+                        </td>
                         <td className="border-b border-[#edf0f2] px-5 py-4 text-right font-bold">{row.amount}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
+              {selectedActivity ? (
+                <div className="mt-4 rounded-xl border border-[#d6d9dc] bg-[#f7f9fa] p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-bold uppercase text-[#687173]">{selectedActivity.date}</p>
+                      <h3 className="mt-1 text-lg font-bold text-[#0c0c0d]">{selectedActivity.type} {selectedActivity.name}</h3>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedActivity(null)}
+                      className="grid h-8 w-8 place-items-center rounded-full text-[#687173] transition hover:bg-white hover:text-[#0c0c0d]"
+                      aria-label="Close activity details"
+                    >
+                      <X size={17} />
+                    </button>
+                  </div>
+                  <p className="mt-3 text-sm font-semibold leading-6 text-[#687173]">{selectedActivity.note}</p>
+                  <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                    <span className="text-base font-bold text-[#0c0c0d]">{selectedActivity.amount}</span>
+                    <Link to="/miniapp/services/paypal/activity" className="text-sm font-bold text-[#0070e0] hover:underline">
+                      Open details
+                    </Link>
+                  </div>
+                </div>
+              ) : null}
             </section>
           </div>
 
-          <aside className="lg:pt-28">
+          <aside className="min-w-0 max-w-full lg:pt-28">
             <p className="mb-3 text-[15px] font-bold text-[#2c2e2f]">Quick actions</p>
-            <section className="rounded-xl border border-[#e0e3e7] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.06)]">
+            <form onSubmit={buildPaymentLink} className="min-w-0 max-w-full rounded-xl border border-[#e0e3e7] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.06)]">
               <div className="flex items-start justify-between gap-3">
                 <h2 className="text-xl font-bold leading-tight text-[#0c0c0d]">Create a Payment Link</h2>
                 <button
@@ -1400,26 +1728,45 @@ function MiniAppPayPalSandboxServicePage({ service }) {
                   <span className="text-sm font-bold text-[#2c2e2f]">Product or service name</span>
                   <input
                     type="text"
+                    value={paymentLinkForm.name}
+                    onChange={(event) => updatePaymentLinkField('name', event.target.value)}
+                    aria-invalid={Boolean(paymentLinkErrors.name)}
+                    aria-describedby={paymentLinkErrors.name ? 'paypal-payment-name-error' : undefined}
                     className="mt-2 h-12 w-full rounded border border-[#92979d] bg-white px-3 text-base font-semibold text-[#0c0c0d] outline-none transition focus:border-[#0070e0] focus:ring-2 focus:ring-[#0070e0]/20"
                   />
+                  {paymentLinkErrors.name ? (
+                    <span id="paypal-payment-name-error" className="mt-1 block text-xs font-bold text-[#8f2b0f]" role="alert">
+                      {paymentLinkErrors.name}
+                    </span>
+                  ) : null}
                 </label>
 
-                <div className="grid grid-cols-[1fr_112px] gap-3">
-                  <label className="block">
+                <div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,1fr)_112px]">
+                  <label className="block min-w-0">
                     <span className="text-sm font-bold text-[#2c2e2f]">Price</span>
                     <div className="mt-2 flex h-12 overflow-hidden rounded border border-[#92979d] bg-white focus-within:border-[#0070e0] focus-within:ring-2 focus-within:ring-[#0070e0]/20">
                       <span className="grid w-10 place-items-center text-base font-bold text-[#687173]">$</span>
                       <input
                         type="text"
                         inputMode="decimal"
+                        value={paymentLinkForm.price}
+                        onChange={(event) => updatePaymentLinkField('price', event.target.value)}
+                        aria-invalid={Boolean(paymentLinkErrors.price)}
+                        aria-describedby={paymentLinkErrors.price ? 'paypal-payment-price-error' : undefined}
                         className="min-w-0 flex-1 border-0 px-0 text-base font-semibold text-[#0c0c0d] outline-none"
                       />
                     </div>
+                    {paymentLinkErrors.price ? (
+                      <span id="paypal-payment-price-error" className="mt-1 block text-xs font-bold text-[#8f2b0f]" role="alert">
+                        {paymentLinkErrors.price}
+                      </span>
+                    ) : null}
                   </label>
-                  <label className="block">
+                  <label className="block min-w-0">
                     <span className="text-sm font-bold text-[#2c2e2f]">Currency</span>
                     <select
-                      defaultValue="USD"
+                      value={paymentLinkForm.currency}
+                      onChange={(event) => updatePaymentLinkField('currency', event.target.value)}
                       className="mt-2 h-12 w-full rounded border border-[#92979d] bg-white px-3 text-base font-bold text-[#0c0c0d] outline-none transition focus:border-[#0070e0] focus:ring-2 focus:ring-[#0070e0]/20"
                     >
                       <option>USD</option>
@@ -1430,41 +1777,226 @@ function MiniAppPayPalSandboxServicePage({ service }) {
                 </div>
               </div>
 
+              {paymentLinkStatus === 'success' ? (
+                <div className="mt-5 rounded-xl border border-[#bfe6cf] bg-[#f2fbf6] p-4" role="status">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 size={19} className="mt-0.5 shrink-0 text-[#137333]" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-[#0c0c0d]">Payment link is ready</p>
+                      <p className="mt-1 break-all text-xs font-semibold leading-5 text-[#687173]">{generatedPaymentLink}</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={copyGeneratedPaymentLink}
+                    className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-[#0070e0] transition hover:underline active:scale-95"
+                  >
+                    <Copy size={15} />
+                    Copy link
+                  </button>
+                </div>
+              ) : null}
+
               <div className="mt-6 grid gap-3">
-                <Link
-                  to={customMailTarget}
-                  className="inline-flex h-12 items-center justify-center rounded-full bg-[#0070e0] px-5 text-base font-bold text-white transition hover:bg-[#003087] active:scale-95"
+                <button
+                  type="submit"
+                  disabled={paymentLinkStatus === 'building'}
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#0070e0] px-5 text-base font-bold text-white transition hover:bg-[#003087] active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
                 >
+                  {paymentLinkStatus === 'building' ? <RefreshCw size={16} className="animate-spin" /> : null}
                   Build It
-                </Link>
+                </button>
                 <Link
-                  to={depositMailTarget}
+                  to="/miniapp/services/paypal/mail?mode=custom-mail"
                   className="inline-flex h-10 items-center justify-center text-base font-bold text-[#0070e0] transition hover:underline active:scale-95"
                 >
                   Customize
                 </Link>
               </div>
-            </section>
+            </form>
           </aside>
         </section>
+
+        {paypalSubpage === 'activity' ? (
+          <section className="mt-10 border-t border-[#e0e3e7] pt-8">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p className="text-sm font-bold uppercase text-[#687173]">Activity</p>
+                <h2 className="mt-2 text-3xl font-bold text-[#0c0c0d]">Transactions and statements</h2>
+                <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-[#687173]">
+                  Review recent payments, bank movement, disputes, and monthly reporting from the same wallet surface.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" className="rounded-full border border-[#0070e0] px-4 py-2 text-sm font-bold text-[#0070e0] transition hover:bg-[#f5faff]">
+                  Download CSV
+                </button>
+                <Link to="/miniapp/analytics?provider=paypal" className="rounded-full bg-[#0070e0] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#003087]">
+                  Reports
+                </Link>
+              </div>
+            </div>
+
+            <div className="mt-6 grid gap-4 md:grid-cols-3">
+              {['All transactions', 'Statements', 'Disputes'].map((label, index) => (
+                <article key={label} className="rounded-xl border border-[#e0e3e7] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.06)]">
+                  <p className="text-sm font-bold text-[#003087]">{label}</p>
+                  <p className="mt-3 text-2xl font-bold text-[#0c0c0d]">{index === 0 ? activityRows.length : index === 1 ? '12' : '0'}</p>
+                  <p className="mt-2 text-sm font-semibold leading-6 text-[#687173]">
+                    {index === 0 ? 'Visible in the current filtered table.' : index === 1 ? 'Monthly records ready to export.' : 'No open cases require action.'}
+                  </p>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {paypalSubpage === 'payment-links' ? (
+          <section className="mt-10 border-t border-[#e0e3e7] pt-8">
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+              <div>
+                <p className="text-sm font-bold uppercase text-[#687173]">Pay and get paid</p>
+                <h2 className="mt-2 text-3xl font-bold text-[#0c0c0d]">Payment links and buttons</h2>
+                <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-[#687173]">
+                  Create links, buttons, and QR-ready checkout moments for product drops, invoices, and message-based sales.
+                </p>
+                <div className="mt-6 overflow-hidden rounded-xl border border-[#e0e3e7] bg-white">
+                  {[
+                    ['Payment link', generatedPaymentLink, paymentLinkStatus === 'success' ? 'Ready' : 'Draft'],
+                    ['Button embed', 'Checkout button for websites and shops', 'Configured'],
+                    ['QR code', 'Printable scan-to-pay experience', 'Available']
+                  ].map(([label, body, status]) => (
+                    <div key={label} className="flex flex-wrap items-center justify-between gap-4 border-b border-[#edf0f2] px-5 py-4 last:border-b-0">
+                      <div>
+                        <p className="text-base font-bold text-[#0c0c0d]">{label}</p>
+                        <p className="mt-1 text-sm font-semibold text-[#687173]">{body}</p>
+                      </div>
+                      <span className="rounded-full bg-[#eef6ff] px-3 py-1 text-xs font-bold text-[#003087]">{status}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <aside className="rounded-xl border border-[#e0e3e7] bg-[#f7f9fa] p-5">
+                <p className="text-base font-bold text-[#0c0c0d]">Link preview</p>
+                <div className="mt-4 rounded-xl border border-[#d6d9dc] bg-white p-4">
+                  <p className="text-sm font-bold text-[#2c2e2f]">{paymentLinkForm.name || 'Product or service'}</p>
+                  <p className="mt-2 text-3xl font-bold text-[#0c0c0d]">
+                    {paymentLinkForm.price ? `$${paymentLinkForm.price}` : '$0.00'}
+                  </p>
+                  <p className="mt-1 text-xs font-bold text-[#687173]">{paymentLinkForm.currency}</p>
+                  <button type="button" className="mt-4 h-11 w-full rounded-full bg-[#0070e0] text-sm font-bold text-white">
+                    Pay now
+                  </button>
+                </div>
+              </aside>
+            </div>
+          </section>
+        ) : null}
+
+        {paypalSubpage === 'mail' ? (
+          <section className="mt-10 border-t border-[#e0e3e7] pt-8">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p className="text-sm font-bold uppercase text-[#687173]">Mail tools</p>
+                <h2 className="mt-2 text-3xl font-bold text-[#0c0c0d]">PayPal mail workspace</h2>
+                <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-[#687173]">
+                  Build custom and deposit mail from the PayPal wallet area while keeping history, provider actions, and delivery context together.
+                </p>
+              </div>
+              <span className="rounded-full bg-[#eef6ff] px-3 py-1 text-xs font-bold text-[#003087]">
+                {paypalMailMode === 'deposit-mail' ? 'Deposit mail selected' : 'Custom mail selected'}
+              </span>
+            </div>
+
+            <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              {paypalWalletMailTasks.map((task) => {
+                const Icon = task.icon;
+                const studioTarget = task.label === 'Custom Mail' ? customMailTarget : task.label === 'Deposit Mail' ? depositMailTarget : task.to;
+                return (
+                  <article key={task.label} className="rounded-xl border border-[#e0e3e7] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.06)]">
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="grid h-11 w-11 place-items-center rounded-full bg-[#eef6ff] text-[#0070e0]">
+                        <Icon size={20} />
+                      </span>
+                      <span className="rounded-full bg-[#f7f9fa] px-2 py-1 text-[11px] font-bold text-[#687173]">{task.badge}</span>
+                    </div>
+                    <h3 className="mt-4 text-lg font-bold text-[#0c0c0d]">{task.label}</h3>
+                    <p className="mt-2 min-h-[72px] text-sm font-semibold leading-6 text-[#687173]">{task.body}</p>
+                    <Link to={studioTarget} className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-[#0070e0] hover:underline">
+                      Open
+                      <ArrowRight size={15} />
+                    </Link>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+        ) : null}
+
+        {paypalSubpage === 'settings' ? (
+          <section className="mt-10 border-t border-[#e0e3e7] pt-8">
+            <div>
+              <p className="text-sm font-bold uppercase text-[#687173]">Settings</p>
+              <h2 className="mt-2 text-3xl font-bold text-[#0c0c0d]">Business account settings</h2>
+              <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-[#687173]">
+                Manage business profile, wallet preferences, service operations, and security checks from one account page.
+              </p>
+            </div>
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              {[
+                ['Business profile', 'Name, profile link, public checkout identity, and contact defaults.', '/miniapp/profile'],
+                ['Wallet preferences', 'Currencies, bank transfer routing, available balance, and funding sources.', '/miniapp/wallet?service=paypal'],
+                ['Service operations', 'Provider health, API credentials, webhook delivery, invoices, and payouts.', providerTarget],
+                ['Security', 'Session review, approval rules, audit trail, and risk controls.', '/miniapp/security?provider=paypal']
+              ].map(([label, body, to]) => (
+                <Link
+                  key={label}
+                  to={to}
+                  className="rounded-xl border border-[#e0e3e7] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.06)] transition hover:border-[#0070e0] hover:shadow-[0_6px_18px_rgba(0,0,0,0.10)]"
+                >
+                  <p className="text-lg font-bold text-[#0c0c0d]">{label}</p>
+                  <p className="mt-2 text-sm font-semibold leading-6 text-[#687173]">{body}</p>
+                  <span className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-[#0070e0]">
+                    Manage
+                    <ArrowRight size={15} />
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        ) : null}
       </main>
 
       <footer className="border-t border-[#e0e3e7] bg-[#f7f9fa]">
         <div className="mx-auto max-w-[1180px] px-4 py-8 text-sm sm:px-6">
           <div className="flex flex-wrap gap-x-5 gap-y-3">
-            {paypalSandboxFooterLinks.map((label) => (
+            {paypalWalletFooterLinks.map((label) => (
               <Link key={label} to={label === 'Developers' ? providerTarget : '/miniapp/support'} className="font-bold text-[#003087] hover:underline">
                 {label}
               </Link>
             ))}
           </div>
 
-          <div className="mt-5 flex flex-wrap gap-x-5 gap-y-3">
-            {paypalSandboxLanguageLinks.map((label) => (
-              <button key={label} type="button" className="font-bold text-[#003087] hover:underline">
-                {label}
-              </button>
-            ))}
+          <div className="relative mt-5 inline-flex flex-wrap gap-x-5 gap-y-3">
+            <button
+              type="button"
+              onClick={() => setLanguageMenuOpen((open) => !open)}
+              className="inline-flex items-center gap-2 font-bold text-[#003087] hover:underline"
+              aria-expanded={languageMenuOpen}
+              aria-controls="paypal-language-menu"
+            >
+              English
+              <ChevronDown size={14} className={languageMenuOpen ? 'rotate-180 transition' : 'transition'} />
+            </button>
+            {languageMenuOpen ? (
+              <div id="paypal-language-menu" className="absolute left-0 top-8 z-20 w-44 rounded-xl border border-[#d6d9dc] bg-white p-2 shadow-[0_14px_32px_rgba(0,0,0,0.14)]">
+                {paypalWalletLanguageLinks.map((label) => (
+                  <button key={label} type="button" className="block w-full rounded-lg px-3 py-2 text-left text-sm font-bold text-[#003087] hover:bg-[#f5f7fa]">
+                    {label}
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </div>
 
           <div className="mt-5 flex flex-wrap items-center justify-between gap-4 text-xs font-semibold text-[#687173]">
@@ -1483,7 +2015,7 @@ function MiniAppPayPalSandboxServicePage({ service }) {
 
 function MiniAppMailServicePicker({ service }) {
   if (service.slug === 'paypal') {
-    return <MiniAppPayPalSandboxServicePage service={service} />;
+    return <MiniAppPayPalWalletServicePage service={service} />;
   }
 
   const customMailTarget = `/miniapp/studio?type=email&service=${service.slug}&mode=custom-mail`;
@@ -2450,7 +2982,7 @@ export default function MiniAppPage() {
   }, [location.search]);
   const activeServiceSlug = activeSection === 'services' ? (slug || queryService) : '';
   const activeService = activeServiceSlug ? getServiceBySlug(activeServiceSlug) : null;
-  const isPayPalSandboxService = activeSection === 'services' && activeServiceSlug === 'paypal';
+  const isPayPalWalletService = activeSection === 'services' && activeServiceSlug === 'paypal';
   const meta = activeService
     ? { title: activeService.title, subtitle: 'Service details' }
     : sectionMeta[activeSection];
@@ -2527,7 +3059,7 @@ export default function MiniAppPage() {
   }, [activeSection, mainButton, telegram]);
 
   return (
-    <MiniAppShell title={meta.title} subtitle={meta.subtitle} immersive={isPayPalSandboxService}>
+    <MiniAppShell title={meta.title} subtitle={meta.subtitle} immersive={isPayPalWalletService}>
       {activeSection === 'home' ? (
         <HomeSection profile={profile} telegram={telegram} receipts={receipts} topUpOrders={topUpOrders} />
       ) : null}
