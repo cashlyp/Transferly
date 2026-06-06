@@ -557,12 +557,12 @@ test('mini app service catalog routes tiles into native service detail screens',
   await page.getByRole('link', { name: /PayPal/i }).first().click();
 
   await expect(page).toHaveURL(/\/miniapp\/services\/paypal$/);
-  await expect(page.getByText('Business Wallet')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'PayPal home page' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Notifications 0' })).toBeVisible();
   await expect(page.getByRole('button', { name: /Menu/i })).toBeVisible();
-  await expect(page.getByText('$5,000.00')).toBeVisible();
+  await expect(page.locator('h1').filter({ hasText: '$5,000.00' })).toBeVisible();
   await expect(page.getByText('USD').first()).toBeVisible();
-  await expect(page.getByText('Available balance')).toBeVisible();
+  await expect(page.locator('p').filter({ hasText: 'Available balance' }).first()).toBeVisible();
   await page.getByRole('button', { name: /Manage money/i }).click();
   await expect(page.getByRole('link', { name: /Transfer to bank/i })).toHaveAttribute('href', '/miniapp/wallet?service=paypal');
   await page.getByRole('button', { name: /Manage money/i }).click();
@@ -611,6 +611,63 @@ test('mini app service catalog routes tiles into native service detail screens',
   await expect(page.getByRole('link', { name: /API credentials/i })).toHaveAttribute('href', '/miniapp/ops?provider=paypal');
   await expect(page.getByRole('link', { name: /Back to Transferly/i })).toHaveAttribute('href', '/miniapp');
   await expect(page.getByText('Copyright © 1999-2026 PayPal. All rights reserved.')).toBeVisible();
+});
+
+test('mini app PayPal sandbox operations complete payment workflows', async ({ page }) => {
+  await primeMiniAppUi(page);
+  await mockTransferlyApi(page);
+  await page.goto('/miniapp/services/paypal');
+
+  await expect(page.getByRole('heading', { name: 'Payments, invoices, payouts, and tracking' })).toBeVisible();
+  await expect(page.getByText('Sandbox / test money only')).toBeVisible();
+  await expect(page.getByText(/Backend contract mirrors the PayPal Sandbox API paths configured in Transferly/)).toBeVisible();
+  await expect(page.locator('[aria-label="Send money navigation"]').getByRole('button', { name: 'Send' })).toBeVisible();
+  await expect(page.locator('[aria-label="Payment flow steps"]').getByText('Send')).toBeVisible();
+
+  await page.getByRole('button', { name: /Validate/i }).click();
+  await expect(page.getByRole('status').getByText('Sandbox Personal Buyer')).toBeVisible();
+  await expect(page.getByRole('status').getByText('Verified')).toBeVisible();
+  await expect(page.getByRole('status').getByText('Personal Account')).toBeVisible();
+  await expect(page.locator('[aria-label="Payment flow steps"]').getByText('Preview')).toBeVisible();
+
+  await page.getByLabel('Amount').fill('88.25');
+  await page.getByLabel('Payment note').fill('QA payout validation');
+  await page.getByRole('button', { name: /Send sandbox payment/i }).click();
+
+  await expect(page.getByRole('heading', { name: 'Payment Confirmation' })).toBeVisible();
+  await expect(page.getByText('Sandbox / Test Payment Confirmation')).toBeVisible();
+    await expect(page.getByRole('status').getByText('Business Account').first()).toBeVisible();
+  await expect(page.getByText(/\$88\.25 USD/)).toBeVisible();
+  await expect(page.getByText(/PAYPAL-TXN-/).first()).toBeVisible();
+  await expect(page.getByRole('button', { name: /Download image/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Download PDF/i })).toBeVisible();
+  await expect(page.locator('[aria-label="Payment flow steps"]').getByText('Confirmation')).toBeVisible();
+
+  await page.getByRole('tab', { name: /Invoices/i }).click();
+  await expect(page.getByRole('heading', { name: 'Invoicing' })).toBeVisible();
+  await page.getByLabel('Search invoices').fill('1001');
+  await expect(page.getByText('INV2-PAYP-1001')).toBeVisible();
+  await expect(page.getByText('INV2-PAYP-1002')).not.toBeVisible();
+  await expect(page.getByText('POST /v2/invoicing/invoices')).toBeVisible();
+
+  await page.getByRole('tab', { name: /Payouts/i }).click();
+  await expect(page.getByRole('heading', { name: 'Send a payout' })).toBeVisible();
+  await page.getByRole('button', { name: /Choose CSV\/TXT file/i }).click();
+  await expect(page.getByText('paypal-sandbox-payouts.csv')).toBeVisible();
+  await expect(page.getByRole('button', { name: /Continue/i })).toBeDisabled();
+  await page.getByLabel(/I confirm this sandbox payout file/i).check();
+  await expect(page.getByRole('button', { name: /Continue/i })).toBeEnabled();
+  await expect(page.getByText('BATCH-PAYPAL-783912')).toBeVisible();
+  await expect(page.getByText('ITEM-PAYPAL-48102')).toBeVisible();
+
+  await page.getByRole('tab', { name: /Track/i }).click();
+  await page.getByRole('button', { name: /Track payment/i }).click();
+  await expect(page.getByText('Recipient validated')).toBeVisible();
+  await expect(page.getByText('Payment completed', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Transactions' })).toBeVisible();
+  await page.getByLabel('Search transactions').fill('PAYPAL-TXN-1001');
+  await page.getByRole('button', { name: /Details PAYPAL-TXN-1001/i }).click();
+  await expect(page.getByText('Sandbox payment completed with zero fee.')).toBeVisible();
 });
 
 test('mini app service detail handles missing service slugs', async ({ page }) => {
@@ -689,7 +746,7 @@ test.describe('mini app visual regression', () => {
     await mockTransferlyApi(page);
     await page.goto('/miniapp/services/paypal');
 
-    await expect(page.getByText('Business Wallet')).toBeVisible();
+    await expect(page.getByRole('link', { name: 'PayPal home page' })).toBeVisible();
     await expect(page.getByText('Business Performance')).toBeVisible();
     await expect(page.getByText('Create a Payment Link')).toBeVisible();
     await expect(page.getByText('Copyright © 1999-2026 PayPal. All rights reserved.')).toBeVisible();

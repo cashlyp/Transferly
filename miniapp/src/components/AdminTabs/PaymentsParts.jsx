@@ -957,7 +957,7 @@ export function PayoutRecordsTable({
                       {payout.payout_id}
                     </div>
                     <div className="mt-1 text-xs text-gray-500">
-                      Batch: {payout.tracking.sender_batch_id || 'Pending'}
+                      Batch: {payout.tracking?.sender_batch_id || 'Pending'}
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700">{payout.summary.receiver}</td>

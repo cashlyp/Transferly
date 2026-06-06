@@ -368,6 +368,15 @@ const paypalWalletMenuPanels = {
     { label: 'Security checks', to: '/miniapp/security?provider=paypal' }
   ],
   'Pay & Get Paid': [
+    { label: 'Create an Invoice', to: '/miniapp/invoices?provider=paypal&action=create' },
+    { label: 'Request Money', to: '/miniapp/services/paypal/mail?mode=custom-mail' },
+    { label: 'PayPal.Me', to: '/miniapp/services/paypal/payment-links?type=paypal-me' },
+    { label: 'QR Code', to: '/miniapp/services/paypal/payment-links?format=qr' },
+    { label: 'Virtual Terminal', to: '/miniapp/ops?provider=paypal&tool=terminal' },
+    { label: 'Payment Links and Buttons', to: '/miniapp/services/paypal/payment-links' },
+    { label: 'Shopping Cart Buttons', to: '/miniapp/services/paypal/payment-links?type=cart' },
+    { label: 'Send Money', to: '/miniapp/payouts?provider=paypal' },
+    { label: 'Payouts', to: '/miniapp/payouts?provider=paypal' },
     { label: 'Payment links', to: '/miniapp/services/paypal/payment-links' },
     { label: 'Custom mail', to: '/miniapp/services/paypal/mail?mode=custom-mail' },
     { label: 'Deposit mail', to: '/miniapp/services/paypal/mail?mode=deposit-mail' }
@@ -395,6 +404,319 @@ const paypalWalletFooterLinks = [
 ];
 
 const paypalWalletLanguageLinks = ['English'];
+
+const paypalSandboxSenderAccount = {
+  name: 'Transferly Business Account',
+  email: 'merchant@transferly.test',
+  accountId: 'PAYPAL-BUSINESS-771904',
+  country: 'United States',
+  accountType: 'Business Account',
+  fundingSource: 'PayPal balance',
+  balance: 5000
+};
+
+const paypalSandboxRecipients = [
+  {
+    email: 'sb-buyer@personal.paypal.com',
+    name: 'Sandbox Personal Buyer',
+    accountId: 'PAYPAL-PERSONAL-548219',
+    country: 'United States',
+    accountType: 'Personal Account',
+    status: 'Verified',
+    route: 'PayPal balance eligible'
+  },
+  {
+    email: 'recipient@example.com',
+    name: 'Recipient Account',
+    accountId: 'PAYPAL-BUSINESS-302144',
+    country: 'United Kingdom',
+    accountType: 'Business Account',
+    status: 'Verified',
+    route: 'Instant sandbox payout'
+  },
+  {
+    email: 'buyer@example.com',
+    name: 'Customer Account',
+    accountId: 'PAYPAL-PERSONAL-884201',
+    country: 'United States',
+    accountType: 'Personal Account',
+    status: 'Verified',
+    route: 'Invoice and goods payment eligible'
+  }
+];
+
+const paypalSandboxInvoices = [
+  {
+    id: 'INV2-PAYP-1001',
+    customer: 'Customer Account',
+    email: 'buyer@example.com',
+    amount: 150,
+    currency: 'USD',
+    status: 'Sent',
+    due: 'Jun 12, 2026',
+    reference: 'INV-1001'
+  },
+  {
+    id: 'INV2-PAYP-1002',
+    customer: 'Recipient Account',
+    email: 'recipient@example.com',
+    amount: 550,
+    currency: 'USD',
+    status: 'Paid',
+    due: 'Jun 02, 2026',
+    reference: 'INV-1002'
+  },
+  {
+    id: 'INV2-PAYP-1003',
+    customer: 'Sandbox Personal Buyer',
+    email: 'sb-buyer@personal.paypal.com',
+    amount: 75,
+    currency: 'USD',
+    status: 'Draft',
+    due: 'Jun 18, 2026',
+    reference: 'INV-1003'
+  }
+];
+
+const paypalSandboxPayoutBatches = [
+  {
+    id: 'BATCH-PAYPAL-783912',
+    senderBatchId: 'batch_1001',
+    receiver: 'recipient@example.com',
+    amount: 75,
+    currency: 'USD',
+    batchStatus: 'Processing',
+    itemStatus: 'Pending',
+    itemId: 'ITEM-PAYPAL-48102'
+  },
+  {
+    id: 'BATCH-PAYPAL-903455',
+    senderBatchId: 'batch_1002',
+    receiver: 'sb-buyer@personal.paypal.com',
+    amount: 125,
+    currency: 'USD',
+    batchStatus: 'Success',
+    itemStatus: 'Completed',
+    itemId: 'ITEM-PAYPAL-90211'
+  }
+];
+
+const paypalOperationTabs = [
+  { id: 'send', label: 'Send payment', icon: Send },
+  { id: 'invoices', label: 'Invoices', icon: Receipt },
+  { id: 'payouts', label: 'Payouts', icon: CreditCard },
+  { id: 'tracking', label: 'Track', icon: Search }
+];
+
+const paypalSandboxTimeline = [
+  { label: 'Created', detail: 'Payment object created from the wallet service page.' },
+  { label: 'Recipient validated', detail: 'Recipient details matched through the sandbox account directory.' },
+  { label: 'Funding checked', detail: 'Sender balance and payout route passed sandbox validation.' },
+  { label: 'Payment completed', detail: 'Sandbox transaction confirmation generated for testing.' }
+];
+
+const paypalSandboxApiChecks = [
+  { label: 'OAuth token', detail: 'Client credentials requested from the PayPal Sandbox API.', status: 'Ready' },
+  { label: 'Invoices API', detail: 'Draft and send calls use /v2/invoicing/invoices.', status: 'Configured' },
+  { label: 'Payouts API', detail: 'Batch and item status calls use /v1/payments/payouts.', status: 'Configured' },
+  { label: 'Webhook verification', detail: 'Events require PayPal transmission headers and webhook ID.', status: 'Protected' }
+];
+
+const paypalSendNavigationTabs = ['Send', 'Request', 'Contacts', 'Pools', 'More'];
+
+const paypalSandboxPayoutFaqs = [
+  ['How do payout files work?', 'Upload a sandbox CSV or TXT with recipient email, amount, currency, and note columns.'],
+  ['When can I continue?', 'The acknowledgement is required before submitting the sandbox payout batch.'],
+  ['How are payout records tracked?', 'Batch IDs and item IDs are stored with their sandbox status for later lookup.']
+];
+
+const paypalSandboxTransactions = [
+  {
+    id: 'PAYPAL-TXN-1001',
+    date: 'Jun 5, 2026, 10:24 AM',
+    type: 'Payment sent',
+    party: 'Sandbox Personal Buyer',
+    email: 'sb-buyer@personal.paypal.com',
+    amount: -125,
+    currency: 'USD',
+    status: 'Completed',
+    reference: 'REF-PAYPAL-1001',
+    source: 'Payouts API',
+    details: 'Sandbox payment completed with zero fee.'
+  },
+  {
+    id: 'PAYPAL-TXN-1002',
+    date: 'Jun 5, 2026, 9:10 AM',
+    type: 'Invoice paid',
+    party: 'Customer Account',
+    email: 'buyer@example.com',
+    amount: 150,
+    currency: 'USD',
+    status: 'Completed',
+    reference: 'INV2-PAYP-1001',
+    source: 'Invoicing API',
+    details: 'Sandbox invoice payment matched to recipient_view_url.'
+  },
+  {
+    id: 'PAYPAL-TXN-1003',
+    date: 'Jun 4, 2026, 4:42 PM',
+    type: 'Payout item',
+    party: 'Recipient Account',
+    email: 'recipient@example.com',
+    amount: -75,
+    currency: 'USD',
+    status: 'Pending',
+    reference: 'ITEM-PAYPAL-48102',
+    source: 'Payouts item API',
+    details: 'Sandbox payout item remains pending until the batch processor completes.'
+  }
+];
+
+function formatPayPalCurrency(value, currency = 'USD') {
+  const numericValue = Number(value || 0);
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 2
+  }).format(Number.isFinite(numericValue) ? numericValue : 0);
+}
+
+function findPayPalSandboxRecipient(email) {
+  const normalizedEmail = email.trim().toLowerCase();
+  return paypalSandboxRecipients.find((recipient) => recipient.email.toLowerCase() === normalizedEmail) || null;
+}
+
+function createPayPalSandboxReference(prefix) {
+  const stamp = Date.now().toString(36).toUpperCase();
+  const suffix = Math.random().toString(36).slice(2, 8).toUpperCase();
+  return `${prefix}-${stamp}-${suffix}`;
+}
+
+function escapePdfText(value) {
+  return String(value ?? '')
+    .replace(/\\/g, '\\\\')
+    .replace(/\(/g, '\\(')
+    .replace(/\)/g, '\\)');
+}
+
+function buildPaymentConfirmationPdf(payment) {
+  const lines = [
+    'Payment Confirmation',
+    'Sandbox / Test Payment Confirmation',
+    'Business Account',
+    `Account type: ${payment.sender.accountType || 'Business Account'}`,
+    `Status: ${payment.status}`,
+    `Transaction ID: ${payment.transactionId}`,
+    `Date/time: ${payment.createdAt}`,
+    `Sender: ${payment.sender.name} (${payment.sender.email})`,
+    `Receiver: ${payment.receiver.name} (${payment.receiver.email})`,
+    `Amount: ${formatPayPalCurrency(payment.amount, payment.currency)} ${payment.currency}`,
+    `Reference: ${payment.reference}`,
+    `Payout batch ID: ${payment.payoutBatchId}`,
+    `Payout item ID: ${payment.payoutItemId}`,
+    'Environment: PayPal Sandbox / test money only'
+  ];
+  const content = lines
+    .map((line, index) => {
+      const size = index === 0 ? 22 : index === 1 ? 14 : 11;
+      const y = 760 - index * 28;
+      return `BT /F1 ${size} Tf 54 ${y} Td (${escapePdfText(line)}) Tj ET`;
+    })
+    .join('\n');
+  const objects = [
+    '1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj',
+    '2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj',
+    '3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >> endobj',
+    '4 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj',
+    `5 0 obj << /Length ${content.length} >> stream\n${content}\nendstream endobj`
+  ];
+  let pdf = '%PDF-1.4\n';
+  const offsets = [0];
+  objects.forEach((object) => {
+    offsets.push(pdf.length);
+    pdf += `${object}\n`;
+  });
+  const xrefStart = pdf.length;
+  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  offsets.slice(1).forEach((offset) => {
+    pdf += `${String(offset).padStart(10, '0')} 00000 n \n`;
+  });
+  pdf += `trailer << /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`;
+  return new Blob([pdf], { type: 'application/pdf' });
+}
+
+function downloadBlob(blob, filename) {
+  const url = window.URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  window.URL.revokeObjectURL(url);
+}
+
+function downloadPaymentConfirmationPdf(payment) {
+  downloadBlob(buildPaymentConfirmationPdf(payment), `${payment.transactionId}-sandbox-payment-confirmation.pdf`);
+}
+
+function downloadPaymentConfirmationImage(payment) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1400;
+  canvas.height = 900;
+  const context = canvas.getContext('2d');
+
+  if (!context) {
+    return;
+  }
+
+  context.fillStyle = '#ffffff';
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.fillStyle = '#f7f9fa';
+  context.fillRect(48, 48, canvas.width - 96, canvas.height - 96);
+  context.strokeStyle = '#d6d9dc';
+  context.lineWidth = 3;
+  context.strokeRect(48, 48, canvas.width - 96, canvas.height - 96);
+  context.fillStyle = '#003087';
+  context.font = '700 46px Arial';
+  context.fillText('Payment Confirmation', 92, 135);
+  context.fillStyle = '#8f2b0f';
+  context.font = '700 28px Arial';
+  context.fillText('Sandbox / Test Payment Confirmation', 92, 190);
+  context.fillStyle = '#003087';
+  context.font = '700 24px Arial';
+  context.fillText('Business Account', 92, 235);
+  context.fillStyle = '#0c0c0d';
+  context.font = '700 30px Arial';
+  context.fillText(`${formatPayPalCurrency(payment.amount, payment.currency)} ${payment.currency}`, 92, 300);
+  context.font = '600 24px Arial';
+
+  [
+    ['Confirmation type', 'Payment Confirmation'],
+    ['Account type', payment.sender.accountType || 'Business Account'],
+    ['Status', payment.status],
+    ['Transaction ID', payment.transactionId],
+    ['Date/time', payment.createdAt],
+    ['Sender', `${payment.sender.name} (${payment.sender.email})`],
+    ['Receiver', `${payment.receiver.name} (${payment.receiver.email})`],
+    ['Reference', payment.reference],
+    ['Payout batch ID', payment.payoutBatchId],
+    ['Payout item ID', payment.payoutItemId],
+    ['Environment', 'PayPal Sandbox / test money only']
+  ].forEach(([label, value], index) => {
+    const y = 370 + index * 46;
+    context.fillStyle = '#687173';
+    context.fillText(label, 92, y);
+    context.fillStyle = '#0c0c0d';
+    context.fillText(value, 420, y);
+  });
+
+  canvas.toBlob((blob) => {
+    if (blob) {
+      downloadBlob(blob, `${payment.transactionId}-sandbox-payment-confirmation.png`);
+    }
+  }, 'image/png');
+}
 
 const launchSteps = [
   {
@@ -1130,11 +1452,45 @@ function MiniAppPayPalWalletServicePage({ service }) {
   const [paymentLinkForm, setPaymentLinkForm] = useState({ name: '', price: '', currency: 'USD' });
   const [paymentLinkErrors, setPaymentLinkErrors] = useState({});
   const [paymentLinkStatus, setPaymentLinkStatus] = useState('idle');
+  const [paypalOperationsTab, setPaypalOperationsTab] = useState('send');
+  const [sendPaymentForm, setSendPaymentForm] = useState({
+    recipientEmail: 'sb-buyer@personal.paypal.com',
+    amount: '125.00',
+    currency: 'USD',
+    note: 'Service test payment'
+  });
+  const [sendPaymentErrors, setSendPaymentErrors] = useState({});
+  const [recipientLookup, setRecipientLookup] = useState({ status: 'idle', account: null, error: '' });
+  const [sendPaymentStatus, setSendPaymentStatus] = useState('idle');
+  const [paymentConfirmation, setPaymentConfirmation] = useState(null);
+  const [trackingQuery, setTrackingQuery] = useState('PAYPAL-TXN-1001');
+  const [trackingStatus, setTrackingStatus] = useState('idle');
+  const [invoiceSearch, setInvoiceSearch] = useState('');
+  const [invoiceStatusFilter, setInvoiceStatusFilter] = useState('ALL');
+  const [invoiceBuilderForm, setInvoiceBuilderForm] = useState({
+    customer: 'buyer@example.com',
+    itemName: 'Consulting service',
+    quantity: '1',
+    price: '150.00',
+    description: 'Sandbox invoice item',
+    note: 'Thank you for your business.'
+  });
+  const [payoutUploadName, setPayoutUploadName] = useState('');
+  const [payoutAcknowledged, setPayoutAcknowledged] = useState(false);
+  const [payoutMessageForm, setPayoutMessageForm] = useState({
+    subject: 'You received a sandbox payout',
+    message: 'This sandbox payout is for development and QA validation only.'
+  });
+  const [transactionFilter, setTransactionFilter] = useState('ALL');
+  const [transactionSearch, setTransactionSearch] = useState('');
+  const [expandedTransactionId, setExpandedTransactionId] = useState('');
   const menuRef = useRef(null);
   const quickAccessRef = useRef(null);
   const performanceRef = useRef(null);
   const retryTimerRef = useRef(null);
   const paymentTimerRef = useRef(null);
+  const recipientLookupTimerRef = useRef(null);
+  const sendPaymentTimerRef = useRef(null);
   const customMailTarget = '/miniapp/studio?type=email&service=paypal&mode=custom-mail';
   const depositMailTarget = '/miniapp/studio?type=email&service=paypal&mode=deposit-mail';
   const providerTarget = '/miniapp/ops?provider=paypal';
@@ -1161,6 +1517,34 @@ function MiniAppPayPalWalletServicePage({ service }) {
   const generatedPaymentLink = paymentLinkForm.name.trim() && paymentLinkForm.price.trim()
     ? `transferly-paypal://${paymentLinkForm.currency.toLowerCase()}/${encodeURIComponent(paymentLinkForm.name.trim())}-${paymentLinkForm.price.trim()}`
     : 'transferly-paypal://payment-link/new';
+  const sendFlowStage = paymentConfirmation ? 'Confirmation' : recipientLookup.status === 'found' ? 'Preview' : 'Send';
+  const invoiceStatusOptions = useMemo(() => ['ALL', ...new Set(paypalSandboxInvoices.map((invoice) => invoice.status))], []);
+  const filteredPaypalInvoices = useMemo(() => {
+    const query = invoiceSearch.trim().toLowerCase();
+    return paypalSandboxInvoices.filter((invoice) => {
+      const matchesStatus = invoiceStatusFilter === 'ALL' || invoice.status === invoiceStatusFilter;
+      const matchesQuery = !query || [invoice.id, invoice.customer, invoice.email, invoice.reference]
+        .some((value) => value.toLowerCase().includes(query));
+      return matchesStatus && matchesQuery;
+    });
+  }, [invoiceSearch, invoiceStatusFilter]);
+  const transactionFilterOptions = useMemo(() => ['ALL', ...new Set(paypalSandboxTransactions.map((transaction) => transaction.status))], []);
+  const filteredPaypalTransactions = useMemo(() => {
+    const query = transactionSearch.trim().toLowerCase();
+    return paypalSandboxTransactions.filter((transaction) => {
+      const matchesStatus = transactionFilter === 'ALL' || transaction.status === transactionFilter;
+      const matchesQuery = !query || [
+        transaction.id,
+        transaction.type,
+        transaction.party,
+        transaction.email,
+        transaction.reference,
+        transaction.source
+      ].some((value) => value.toLowerCase().includes(query));
+      return matchesStatus && matchesQuery;
+    });
+  }, [transactionFilter, transactionSearch]);
+  const invoiceBuilderTotal = Number(invoiceBuilderForm.quantity || 0) * Number(invoiceBuilderForm.price || 0);
 
   useEffect(() => {
     setMenuOpen(false);
@@ -1174,6 +1558,8 @@ function MiniAppPayPalWalletServicePage({ service }) {
   useEffect(() => () => {
     window.clearTimeout(retryTimerRef.current);
     window.clearTimeout(paymentTimerRef.current);
+    window.clearTimeout(recipientLookupTimerRef.current);
+    window.clearTimeout(sendPaymentTimerRef.current);
   }, []);
 
   useEffect(() => {
@@ -1261,6 +1647,181 @@ function MiniAppPayPalWalletServicePage({ service }) {
     }
   };
 
+  const updateSendPaymentField = (field, value) => {
+    setSendPaymentForm((current) => ({ ...current, [field]: value }));
+    setSendPaymentErrors((current) => ({ ...current, [field]: '' }));
+    setSendPaymentStatus('idle');
+    setPaymentConfirmation(null);
+
+    if (field === 'recipientEmail') {
+      setRecipientLookup({ status: 'idle', account: null, error: '' });
+    }
+  };
+
+  const lookupRecipientAccount = () => {
+    const recipientEmail = sendPaymentForm.recipientEmail.trim();
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail)) {
+      setRecipientLookup({ status: 'error', account: null, error: 'Enter a valid recipient email address.' });
+      setSendPaymentErrors((current) => ({ ...current, recipientEmail: 'Enter a valid recipient email address.' }));
+      return null;
+    }
+
+    setRecipientLookup({ status: 'loading', account: null, error: '' });
+    window.clearTimeout(recipientLookupTimerRef.current);
+    recipientLookupTimerRef.current = window.setTimeout(() => {
+      const account = findPayPalSandboxRecipient(recipientEmail);
+      if (account) {
+        setRecipientLookup({ status: 'found', account, error: '' });
+        setSendPaymentErrors((current) => ({ ...current, recipientEmail: '' }));
+      } else {
+        setRecipientLookup({
+          status: 'error',
+          account: null,
+          error: 'No sandbox account matches this recipient. Try sb-buyer@personal.paypal.com.'
+        });
+      }
+    }, 450);
+
+    return null;
+  };
+
+  const sendSandboxPayment = (event) => {
+    event.preventDefault();
+
+    const errors = {};
+    const amount = Number(sendPaymentForm.amount);
+    const recipientEmail = sendPaymentForm.recipientEmail.trim();
+    const recipient = recipientLookup.account || findPayPalSandboxRecipient(recipientEmail);
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail)) {
+      errors.recipientEmail = 'Enter a valid recipient email address.';
+    }
+    if (!sendPaymentForm.amount.trim() || Number.isNaN(amount) || amount <= 0) {
+      errors.amount = 'Enter an amount greater than 0.';
+    }
+    if (amount > paypalSandboxSenderAccount.balance) {
+      errors.amount = 'Amount exceeds the available sandbox account balance.';
+    }
+    if (!recipient) {
+      errors.recipientEmail = 'Validate a known sandbox recipient before sending.';
+    }
+
+    if (Object.keys(errors).length) {
+      setSendPaymentErrors(errors);
+      setSendPaymentStatus('error');
+      if (!recipient) {
+        lookupRecipientAccount();
+      }
+      return;
+    }
+
+    setRecipientLookup({ status: 'found', account: recipient, error: '' });
+    setSendPaymentStatus('processing');
+    window.clearTimeout(sendPaymentTimerRef.current);
+    sendPaymentTimerRef.current = window.setTimeout(() => {
+      const transactionId = createPayPalSandboxReference('PAYPAL-TXN');
+      const confirmation = {
+        transactionId,
+        reference: createPayPalSandboxReference('REF'),
+        payoutBatchId: createPayPalSandboxReference('BATCH'),
+        payoutItemId: createPayPalSandboxReference('ITEM'),
+        createdAt: new Intl.DateTimeFormat('en-US', {
+          dateStyle: 'medium',
+          timeStyle: 'short'
+        }).format(new Date()),
+        status: 'Completed',
+        amount,
+        currency: sendPaymentForm.currency,
+        note: sendPaymentForm.note.trim() || 'Sandbox payment',
+        sender: paypalSandboxSenderAccount,
+        receiver: recipient
+      };
+      setPaymentConfirmation(confirmation);
+      setTrackingQuery(transactionId);
+      setSendPaymentStatus('success');
+      toast.success('Sandbox payment completed');
+    }, 700);
+  };
+
+  const trackSandboxTransaction = (event) => {
+    event.preventDefault();
+
+    if (!trackingQuery.trim()) {
+      setTrackingStatus('error');
+      return;
+    }
+
+    setTrackingStatus('loading');
+    window.setTimeout(() => {
+      setTrackingStatus('found');
+    }, 350);
+  };
+
+  const updateInvoiceBuilderField = (field, value) => {
+    setInvoiceBuilderForm((current) => ({ ...current, [field]: value }));
+  };
+
+  const submitSandboxInvoice = (event) => {
+    event.preventDefault();
+    toast.success('Sandbox invoice draft ready');
+  };
+
+  const downloadSandboxInvoiceCsv = () => {
+    const rows = [
+      'invoice,customer,email,status,amount,currency,due',
+      ...paypalSandboxInvoices.map((invoice) => (
+        [invoice.id, invoice.customer, invoice.email, invoice.status, invoice.amount, invoice.currency, invoice.due].join(',')
+      ))
+    ];
+    downloadBlob(new Blob([rows.join('\n')], { type: 'text/csv' }), 'paypal-sandbox-invoices.csv');
+  };
+
+  const updatePayoutMessageField = (field, value) => {
+    setPayoutMessageForm((current) => ({ ...current, [field]: value }));
+  };
+
+  const chooseSandboxPayoutFile = () => {
+    setPayoutUploadName('paypal-sandbox-payouts.csv');
+  };
+
+  const downloadSandboxPayoutSample = () => {
+    downloadBlob(
+      new Blob(['email,amount,currency,note\nrecipient@example.com,75.00,USD,Sandbox payout item'], { type: 'text/csv' }),
+      'paypal-sandbox-payout-sample.csv'
+    );
+  };
+
+  const submitSandboxPayoutFile = (event) => {
+    event.preventDefault();
+    if (!payoutAcknowledged) {
+      toast.error('Confirm sandbox payout acknowledgement first');
+      return;
+    }
+    toast.success('Sandbox payout batch queued');
+  };
+
+  const downloadSandboxTransactionCsv = () => {
+    const rows = [
+      'transaction,date,type,party,email,status,amount,currency,reference,source',
+      ...paypalSandboxTransactions.map((transaction) => (
+        [
+          transaction.id,
+          transaction.date,
+          transaction.type,
+          transaction.party,
+          transaction.email,
+          transaction.status,
+          transaction.amount,
+          transaction.currency,
+          transaction.reference,
+          transaction.source
+        ].join(',')
+      ))
+    ];
+    downloadBlob(new Blob([rows.join('\n')], { type: 'text/csv' }), 'paypal-sandbox-transactions.csv');
+  };
+
   return (
     <div className="min-h-screen bg-white text-[#0c0c0d]">
       <header className="sticky top-0 z-40 border-b border-[#d6d9dc] bg-white">
@@ -1268,7 +1829,7 @@ function MiniAppPayPalWalletServicePage({ service }) {
           <Link to="/miniapp/services/paypal" className="flex items-center gap-4 text-[#001c64]" aria-label="PayPal home page">
             <ServiceLogo service={service} size="md" />
             <span className="hidden h-7 w-px bg-[#d6d9dc] sm:block" aria-hidden="true" />
-            <span className="text-[22px] font-bold text-[#2c2e2f]">Business Wallet</span>
+            <span className="text-[22px] font-bold text-[#2c2e2f]">Business Account</span>
           </Link>
 
           <div className="relative flex items-center gap-2 sm:gap-4">
@@ -1701,6 +2262,884 @@ function MiniAppPayPalWalletServicePage({ service }) {
                       Open details
                     </Link>
                   </div>
+                </div>
+              ) : null}
+            </section>
+
+            <section className="mt-10 min-w-0 rounded-xl border border-[#e0e3e7] bg-[#f7f9fa] p-4 sm:p-5">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-bold uppercase text-[#687173]">Sandbox operations</p>
+                  <h2 className="mt-2 text-2xl font-bold text-[#0c0c0d]">Payments, invoices, payouts, and tracking</h2>
+                  <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-[#687173]">
+                    Run PayPal-style test flows with validated sender and receiver details, transaction references, and confirmation exports.
+                  </p>
+                </div>
+                <span className="rounded-full bg-[#fff6e5] px-3 py-1 text-xs font-bold text-[#8a5300]">
+                  Sandbox / test money only
+                </span>
+              </div>
+
+              <div className="mt-5 rounded-xl border border-[#d6d9dc] bg-white p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-bold text-[#0c0c0d]">Sandbox API readiness</p>
+                    <p className="mt-1 max-w-3xl text-xs font-semibold leading-5 text-[#687173]">
+                      Backend contract mirrors the PayPal Sandbox API paths configured in Transferly. The records shown in this demo surface remain visibly marked as sandbox/test until a connected backend response is loaded.
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-[#e8f8f0] px-3 py-1 text-xs font-bold text-[#137333]">
+                    Test environment
+                  </span>
+                </div>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                  {paypalSandboxApiChecks.map((check) => (
+                    <article key={check.label} className="rounded-lg border border-[#e0e3e7] bg-[#f7f9fa] p-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-bold text-[#0c0c0d]">{check.label}</p>
+                        <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold uppercase text-[#003087]">
+                          {check.status}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-xs font-semibold leading-5 text-[#687173]">{check.detail}</p>
+                    </article>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-5 flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="PayPal sandbox operations">
+                {paypalOperationTabs.map((tab) => {
+                  const Icon = tab.icon;
+                  const isActive = paypalOperationsTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setPaypalOperationsTab(tab.id)}
+                      className={`inline-flex h-11 shrink-0 items-center gap-2 rounded-full border px-4 text-sm font-bold transition ${
+                        isActive
+                          ? 'border-[#0070e0] bg-[#0070e0] text-white'
+                          : 'border-[#d6d9dc] bg-white text-[#003087] hover:border-[#0070e0]'
+                      }`}
+                      role="tab"
+                      aria-selected={isActive}
+                    >
+                      <Icon size={16} />
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {paypalOperationsTab === 'send' ? (
+                <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_330px]">
+                  <form onSubmit={sendSandboxPayment} className="min-w-0 rounded-xl border border-[#e0e3e7] bg-white p-5">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <h3 className="text-xl font-bold text-[#0c0c0d]">Send sandbox payment</h3>
+                        <p className="mt-2 text-sm font-semibold leading-6 text-[#687173]">
+                          Validate a recipient account, review the payment route, then complete a sandbox-only payment.
+                        </p>
+                      </div>
+                      <span className="rounded-full bg-[#eef6ff] px-3 py-1 text-xs font-bold text-[#003087]">
+                        OAuth + payouts flow
+                      </span>
+                    </div>
+
+                    <div className="mt-5 flex gap-2 overflow-x-auto border-b border-[#e0e3e7] pb-3" aria-label="Send money navigation">
+                      {paypalSendNavigationTabs.map((tab) => (
+                        <button
+                          key={tab}
+                          type="button"
+                          className={`h-9 shrink-0 rounded-full px-4 text-sm font-bold transition ${
+                            tab === 'Send'
+                              ? 'bg-[#0070e0] text-white'
+                              : 'bg-[#f5f7fa] text-[#003087] hover:bg-[#eef6ff]'
+                          }`}
+                        >
+                          {tab}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="mt-4 grid gap-2 sm:grid-cols-3" aria-label="Payment flow steps">
+                      {['Send', 'Preview', 'Confirmation'].map((step, index) => {
+                        const currentIndex = ['Send', 'Preview', 'Confirmation'].indexOf(sendFlowStage);
+                        const isActive = sendFlowStage === step;
+                        const isComplete = index < currentIndex;
+                        return (
+                          <div
+                            key={step}
+                            className={`rounded-lg border px-3 py-2 text-sm font-bold ${
+                              isActive || isComplete
+                                ? 'border-[#0070e0] bg-[#eef6ff] text-[#003087]'
+                                : 'border-[#e0e3e7] bg-[#f7f9fa] text-[#687173]'
+                            }`}
+                          >
+                            <span className="mr-2 inline-grid h-5 w-5 place-items-center rounded-full bg-white text-[11px]">
+                              {isComplete ? 'OK' : index + 1}
+                            </span>
+                            {step}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className="mt-5 grid gap-4">
+                      <label className="block">
+                        <span className="text-sm font-bold text-[#2c2e2f]">Recipient email</span>
+                        <div className="mt-2 grid gap-2 sm:grid-cols-[minmax(0,1fr)_150px]">
+                          <input
+                            type="email"
+                            value={sendPaymentForm.recipientEmail}
+                            onChange={(event) => updateSendPaymentField('recipientEmail', event.target.value)}
+                            aria-invalid={Boolean(sendPaymentErrors.recipientEmail)}
+                            aria-describedby={sendPaymentErrors.recipientEmail ? 'paypal-send-recipient-error' : undefined}
+                            className="h-12 min-w-0 rounded border border-[#92979d] bg-white px-3 text-base font-semibold text-[#0c0c0d] outline-none transition focus:border-[#0070e0] focus:ring-2 focus:ring-[#0070e0]/20"
+                          />
+                          <button
+                            type="button"
+                            onClick={lookupRecipientAccount}
+                            disabled={recipientLookup.status === 'loading'}
+                            className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-[#0070e0] px-4 text-sm font-bold text-[#0070e0] transition hover:bg-[#f5faff] active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
+                          >
+                            {recipientLookup.status === 'loading' ? <RefreshCw size={15} className="animate-spin" /> : <Search size={15} />}
+                            Validate
+                          </button>
+                        </div>
+                        {sendPaymentErrors.recipientEmail ? (
+                          <span id="paypal-send-recipient-error" className="mt-1 block text-xs font-bold text-[#8f2b0f]" role="alert">
+                            {sendPaymentErrors.recipientEmail}
+                          </span>
+                        ) : null}
+                      </label>
+
+                      {recipientLookup.status === 'found' && recipientLookup.account ? (
+                        <div className="rounded-xl border border-[#bfe6cf] bg-[#f2fbf6] p-4" role="status">
+                          <div className="flex items-start gap-3">
+                            <CheckCircle2 size={19} className="mt-0.5 shrink-0 text-[#137333]" />
+                            <div className="min-w-0">
+                              <p className="text-sm font-bold text-[#0c0c0d]">{recipientLookup.account.name}</p>
+                              <p className="mt-1 break-all text-xs font-semibold leading-5 text-[#687173]">
+                                {recipientLookup.account.email} · {recipientLookup.account.accountType} · {recipientLookup.account.status}
+                              </p>
+                              <p className="mt-1 text-xs font-semibold leading-5 text-[#687173]">
+                                Account ID {recipientLookup.account.accountId} · {recipientLookup.account.route}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ) : null}
+
+                      {recipientLookup.status === 'error' && recipientLookup.error ? (
+                        <div className="rounded-xl border border-[#f4c7bd] bg-[#fff7f5] p-4 text-sm font-bold text-[#8f2b0f]" role="alert">
+                          {recipientLookup.error}
+                        </div>
+                      ) : null}
+
+                      <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_120px]">
+                        <label className="block min-w-0">
+                          <span className="text-sm font-bold text-[#2c2e2f]">Amount</span>
+                          <div className="mt-2 flex h-12 overflow-hidden rounded border border-[#92979d] bg-white focus-within:border-[#0070e0] focus-within:ring-2 focus-within:ring-[#0070e0]/20">
+                            <span className="grid w-10 place-items-center text-base font-bold text-[#687173]">$</span>
+                            <input
+                              type="text"
+                              inputMode="decimal"
+                              value={sendPaymentForm.amount}
+                              onChange={(event) => updateSendPaymentField('amount', event.target.value)}
+                              aria-invalid={Boolean(sendPaymentErrors.amount)}
+                              aria-describedby={sendPaymentErrors.amount ? 'paypal-send-amount-error' : undefined}
+                              className="min-w-0 flex-1 border-0 px-0 text-base font-semibold text-[#0c0c0d] outline-none"
+                            />
+                          </div>
+                          {sendPaymentErrors.amount ? (
+                            <span id="paypal-send-amount-error" className="mt-1 block text-xs font-bold text-[#8f2b0f]" role="alert">
+                              {sendPaymentErrors.amount}
+                            </span>
+                          ) : null}
+                        </label>
+                        <label className="block min-w-0">
+                          <span className="text-sm font-bold text-[#2c2e2f]">Currency</span>
+                          <select
+                            value={sendPaymentForm.currency}
+                            onChange={(event) => updateSendPaymentField('currency', event.target.value)}
+                            className="mt-2 h-12 w-full rounded border border-[#92979d] bg-white px-3 text-base font-bold text-[#0c0c0d] outline-none transition focus:border-[#0070e0] focus:ring-2 focus:ring-[#0070e0]/20"
+                          >
+                            <option>USD</option>
+                            <option>EUR</option>
+                            <option>GBP</option>
+                          </select>
+                        </label>
+                      </div>
+
+                      <label className="block">
+                        <span className="text-sm font-bold text-[#2c2e2f]">Payment note</span>
+                        <textarea
+                          value={sendPaymentForm.note}
+                          onChange={(event) => updateSendPaymentField('note', event.target.value)}
+                          rows={3}
+                          className="mt-2 w-full rounded border border-[#92979d] bg-white px-3 py-3 text-base font-semibold text-[#0c0c0d] outline-none transition focus:border-[#0070e0] focus:ring-2 focus:ring-[#0070e0]/20"
+                        />
+                      </label>
+                    </div>
+
+                    <div className="mt-5 rounded-xl border border-[#e0e3e7] bg-[#f7f9fa] p-4">
+                      <p className="text-sm font-bold text-[#0c0c0d]">Review</p>
+                      <dl className="mt-3 grid gap-2 text-sm font-semibold text-[#687173] sm:grid-cols-2">
+                        <div>
+                          <dt>Sender Business Account</dt>
+                          <dd className="mt-1 font-bold text-[#0c0c0d]">{paypalSandboxSenderAccount.name}</dd>
+                        </div>
+                        <div>
+                          <dt>Receiver</dt>
+                          <dd className="mt-1 font-bold text-[#0c0c0d]">{recipientLookup.account?.name || 'Validate recipient'}</dd>
+                        </div>
+                        <div>
+                          <dt>Available balance</dt>
+                          <dd className="mt-1 font-bold text-[#0c0c0d]">{formatPayPalCurrency(paypalSandboxSenderAccount.balance, 'USD')}</dd>
+                        </div>
+                        <div>
+                          <dt>Estimated fee</dt>
+                          <dd className="mt-1 font-bold text-[#0c0c0d]">$0.00 sandbox</dd>
+                        </div>
+                      </dl>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={sendPaymentStatus === 'processing'}
+                      className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#0070e0] px-5 text-base font-bold text-white transition hover:bg-[#003087] active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
+                    >
+                      {sendPaymentStatus === 'processing' ? <RefreshCw size={16} className="animate-spin" /> : <Send size={16} />}
+                      Send sandbox payment
+                    </button>
+                  </form>
+
+                  <aside className="min-w-0 rounded-xl border border-[#e0e3e7] bg-white p-5">
+                    <p className="text-base font-bold text-[#0c0c0d]">Payment status</p>
+                    {paymentConfirmation ? (
+                      <div className="mt-4" role="status">
+                        <span className="inline-flex items-center gap-2 rounded-full bg-[#e8f8f0] px-3 py-1 text-xs font-bold text-[#137333]">
+                          <CheckCircle2 size={14} />
+                          Completed
+                        </span>
+                        <h3 className="mt-4 text-2xl font-bold text-[#0c0c0d]">Payment Confirmation</h3>
+                        <p className="mt-2 rounded-lg bg-[#fff6e5] px-3 py-2 text-xs font-bold text-[#8a5300]">
+                          Sandbox / Test Payment Confirmation
+                        </p>
+                        <p className="mt-2 inline-flex rounded-full bg-[#e7f3ff] px-3 py-1 text-xs font-bold text-[#003087]">
+                          Business Account
+                        </p>
+                        <dl className="mt-4 grid gap-3 text-sm">
+                          {[
+                            ['Confirmation type', 'Payment Confirmation'],
+                            ['Account type', paymentConfirmation.sender.accountType || 'Business Account'],
+                            ['Amount', `${formatPayPalCurrency(paymentConfirmation.amount, paymentConfirmation.currency)} ${paymentConfirmation.currency}`],
+                            ['Transaction ID', paymentConfirmation.transactionId],
+                            ['Date/time', paymentConfirmation.createdAt],
+                            ['Sender', paymentConfirmation.sender.email],
+                            ['Receiver', paymentConfirmation.receiver.email],
+                            ['Payout batch', paymentConfirmation.payoutBatchId]
+                          ].map(([label, value]) => (
+                            <div key={label}>
+                              <dt className="font-bold text-[#687173]">{label}</dt>
+                              <dd className="mt-1 break-all font-bold text-[#0c0c0d]">{value}</dd>
+                            </div>
+                          ))}
+                        </dl>
+                        <div className="mt-5 grid gap-2">
+                          <button
+                            type="button"
+                            onClick={() => downloadPaymentConfirmationImage(paymentConfirmation)}
+                            className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#0070e0] px-4 text-sm font-bold text-[#0070e0] transition hover:bg-[#f5faff]"
+                          >
+                            <FileText size={15} />
+                            Download image
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => downloadPaymentConfirmationPdf(paymentConfirmation)}
+                            className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#0070e0] px-4 text-sm font-bold text-white transition hover:bg-[#003087]"
+                          >
+                            <Receipt size={15} />
+                            Download PDF
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mt-4 rounded-xl border border-dashed border-[#c6cbd1] bg-[#f7f9fa] px-4 py-6 text-center">
+                        <Clock3 size={24} className="mx-auto text-[#687173]" />
+                        <p className="mt-3 text-sm font-bold text-[#2c2e2f]">No payment sent yet.</p>
+                        <p className="mt-1 text-xs font-semibold leading-5 text-[#687173]">
+                          A confirmation card, transaction ID, and downloadable test documents appear after completion.
+                        </p>
+                      </div>
+                    )}
+                  </aside>
+                </div>
+              ) : null}
+
+              {paypalOperationsTab === 'invoices' ? (
+                <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
+                  <section className="min-w-0 rounded-xl border border-[#e0e3e7] bg-white p-5">
+                    <div className="flex flex-wrap items-start justify-between gap-4">
+                      <div>
+                        <p className="text-sm font-bold uppercase text-[#687173]">Manage</p>
+                        <h3 className="mt-1 text-2xl font-bold text-[#0c0c0d]">Invoicing</h3>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <button type="button" className="rounded-full border border-[#d6d9dc] px-4 py-2 text-sm font-bold text-[#003087] transition hover:border-[#0070e0]">
+                          Settings
+                        </button>
+                        <button type="button" className="rounded-full border border-[#d6d9dc] px-4 py-2 text-sm font-bold text-[#003087] transition hover:border-[#0070e0]">
+                          Invoice with AI
+                        </button>
+                        <button type="button" className="rounded-full bg-[#0070e0] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#003087]">
+                          Create New
+                        </button>
+                      </div>
+                    </div>
+                    <div className="mt-5 flex gap-2 overflow-x-auto border-b border-[#e0e3e7] pb-3">
+                      {['Invoices', 'Estimates', 'Recurring series'].map((tab) => (
+                        <button
+                          key={tab}
+                          type="button"
+                          className={`h-9 shrink-0 rounded-full px-4 text-sm font-bold ${
+                            tab === 'Invoices' ? 'bg-[#0070e0] text-white' : 'bg-[#f5f7fa] text-[#003087]'
+                          }`}
+                        >
+                          {tab}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_180px_auto]">
+                      <label className="block min-w-0">
+                        <span className="text-xs font-bold text-[#687173]">Search invoices</span>
+                        <input
+                          type="search"
+                          value={invoiceSearch}
+                          onChange={(event) => setInvoiceSearch(event.target.value)}
+                          className="mt-1 h-11 w-full rounded border border-[#92979d] px-3 text-sm font-semibold outline-none focus:border-[#0070e0] focus:ring-2 focus:ring-[#0070e0]/20"
+                        />
+                      </label>
+                      <label className="block min-w-0">
+                        <span className="text-xs font-bold text-[#687173]">Invoice status</span>
+                        <select
+                          value={invoiceStatusFilter}
+                          onChange={(event) => setInvoiceStatusFilter(event.target.value)}
+                          className="mt-1 h-11 w-full rounded border border-[#92979d] px-3 text-sm font-bold outline-none focus:border-[#0070e0] focus:ring-2 focus:ring-[#0070e0]/20"
+                        >
+                          {invoiceStatusOptions.map((status) => <option key={status}>{status}</option>)}
+                        </select>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={downloadSandboxInvoiceCsv}
+                        className="mt-auto inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#0070e0] px-4 text-sm font-bold text-[#0070e0] transition hover:bg-[#f5faff]"
+                      >
+                        <FileText size={15} />
+                        Download
+                      </button>
+                    </div>
+                    <div className="mt-4 overflow-x-auto rounded-xl border border-[#e0e3e7]">
+                      <table className="w-full min-w-[720px] border-separate border-spacing-0 text-left text-sm">
+                        <thead className="bg-[#f7f9fa] text-xs font-bold uppercase text-[#687173]">
+                          <tr>
+                            <th className="px-5 py-3">Invoice</th>
+                            <th className="px-5 py-3">Customer</th>
+                            <th className="px-5 py-3">Due</th>
+                            <th className="px-5 py-3">Status</th>
+                            <th className="px-5 py-3 text-right">Amount</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredPaypalInvoices.map((invoice) => (
+                            <tr key={invoice.id} className="font-semibold text-[#0c0c0d] transition hover:bg-[#f8f9fb]">
+                              <td className="border-t border-[#edf0f2] px-5 py-4">
+                                <p className="font-bold text-[#003087]">{invoice.id}</p>
+                                <p className="mt-1 text-xs text-[#687173]">{invoice.reference}</p>
+                              </td>
+                              <td className="border-t border-[#edf0f2] px-5 py-4">
+                                <p>{invoice.customer}</p>
+                                <p className="mt-1 text-xs text-[#687173]">{invoice.email}</p>
+                              </td>
+                              <td className="border-t border-[#edf0f2] px-5 py-4 text-[#687173]">{invoice.due}</td>
+                              <td className="border-t border-[#edf0f2] px-5 py-4">
+                                <span className={`rounded-full px-2 py-1 text-[11px] font-bold ${
+                                  invoice.status === 'Paid'
+                                    ? 'bg-[#e8f8f0] text-[#137333]'
+                                    : invoice.status === 'Sent'
+                                      ? 'bg-[#eef6ff] text-[#003087]'
+                                      : 'bg-[#f7f9fa] text-[#687173]'
+                                }`}>
+                                  {invoice.status}
+                                </span>
+                              </td>
+                              <td className="border-t border-[#edf0f2] px-5 py-4 text-right font-bold">
+                                {formatPayPalCurrency(invoice.amount, invoice.currency)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      {!filteredPaypalInvoices.length ? (
+                        <div className="border-t border-[#edf0f2] px-5 py-8 text-center">
+                          <Receipt size={24} className="mx-auto text-[#687173]" />
+                          <p className="mt-3 text-sm font-bold text-[#2c2e2f]">No invoices match this view.</p>
+                          <p className="mt-1 text-xs font-semibold text-[#687173]">Clear the search or choose another status filter.</p>
+                        </div>
+                      ) : null}
+                    </div>
+                  </section>
+                  <aside className="rounded-xl border border-[#e0e3e7] bg-white p-5">
+                    <form onSubmit={submitSandboxInvoice}>
+                      <p className="text-base font-bold text-[#0c0c0d]">Create invoice</p>
+                      <p className="mt-2 text-sm font-semibold leading-6 text-[#687173]">
+                        Draft, send, remind, cancel, and reconcile invoice states from the same PayPal service surface.
+                      </p>
+                      <div className="mt-4 rounded-xl bg-[#f7f9fa] p-4 text-xs font-bold leading-6 text-[#687173]">
+                        POST /v2/invoicing/invoices<br />
+                        POST /v2/invoicing/invoices/:id/send
+                      </div>
+                      <div className="mt-4 grid gap-3">
+                        <label className="block">
+                          <span className="text-xs font-bold text-[#687173]">Customer</span>
+                          <input
+                            type="email"
+                            value={invoiceBuilderForm.customer}
+                            onChange={(event) => updateInvoiceBuilderField('customer', event.target.value)}
+                            className="mt-1 h-11 w-full rounded border border-[#92979d] px-3 text-sm font-semibold outline-none focus:border-[#0070e0] focus:ring-2 focus:ring-[#0070e0]/20"
+                          />
+                        </label>
+                        <label className="block">
+                          <span className="text-xs font-bold text-[#687173]">Template / currency</span>
+                          <select className="mt-1 h-11 w-full rounded border border-[#92979d] px-3 text-sm font-bold outline-none focus:border-[#0070e0] focus:ring-2 focus:ring-[#0070e0]/20">
+                            <option>Service invoice - USD</option>
+                            <option>Goods invoice - USD</option>
+                          </select>
+                        </label>
+                        <label className="block">
+                          <span className="text-xs font-bold text-[#687173]">Item name</span>
+                          <input
+                            type="text"
+                            value={invoiceBuilderForm.itemName}
+                            onChange={(event) => updateInvoiceBuilderField('itemName', event.target.value)}
+                            className="mt-1 h-11 w-full rounded border border-[#92979d] px-3 text-sm font-semibold outline-none focus:border-[#0070e0] focus:ring-2 focus:ring-[#0070e0]/20"
+                          />
+                        </label>
+                        <div className="grid grid-cols-2 gap-3">
+                          <label className="block">
+                            <span className="text-xs font-bold text-[#687173]">Quantity</span>
+                            <input
+                              type="number"
+                              min="1"
+                              value={invoiceBuilderForm.quantity}
+                              onChange={(event) => updateInvoiceBuilderField('quantity', event.target.value)}
+                              className="mt-1 h-11 w-full rounded border border-[#92979d] px-3 text-sm font-semibold outline-none focus:border-[#0070e0] focus:ring-2 focus:ring-[#0070e0]/20"
+                            />
+                          </label>
+                          <label className="block">
+                            <span className="text-xs font-bold text-[#687173]">Item price</span>
+                            <input
+                              type="text"
+                              inputMode="decimal"
+                              value={invoiceBuilderForm.price}
+                              onChange={(event) => updateInvoiceBuilderField('price', event.target.value)}
+                              className="mt-1 h-11 w-full rounded border border-[#92979d] px-3 text-sm font-semibold outline-none focus:border-[#0070e0] focus:ring-2 focus:ring-[#0070e0]/20"
+                            />
+                          </label>
+                        </div>
+                        <label className="block">
+                          <span className="text-xs font-bold text-[#687173]">Description</span>
+                          <textarea
+                            value={invoiceBuilderForm.description}
+                            onChange={(event) => updateInvoiceBuilderField('description', event.target.value)}
+                            rows={2}
+                            className="mt-1 w-full rounded border border-[#92979d] px-3 py-2 text-sm font-semibold outline-none focus:border-[#0070e0] focus:ring-2 focus:ring-[#0070e0]/20"
+                          />
+                        </label>
+                        <label className="block">
+                          <span className="text-xs font-bold text-[#687173]">Notes</span>
+                          <textarea
+                            value={invoiceBuilderForm.note}
+                            onChange={(event) => updateInvoiceBuilderField('note', event.target.value)}
+                            rows={2}
+                            className="mt-1 w-full rounded border border-[#92979d] px-3 py-2 text-sm font-semibold outline-none focus:border-[#0070e0] focus:ring-2 focus:ring-[#0070e0]/20"
+                          />
+                        </label>
+                        {['Amount only', 'Quantity', 'Hours'].map((mode, index) => (
+                          <label key={mode} className="flex items-center gap-2 text-sm font-semibold text-[#2c2e2f]">
+                            <input type="radio" name="paypal-invoice-line-mode" defaultChecked={index === 1} />
+                            {mode}
+                          </label>
+                        ))}
+                        {['Show tax', 'Show discount', 'Show date', 'Ship items', 'Accept cards and PayPal', 'Allow partial payments'].map((option, index) => (
+                          <label key={option} className="flex items-center gap-2 text-sm font-semibold text-[#2c2e2f]">
+                            <input type="checkbox" defaultChecked={index >= 4} />
+                            {option}
+                          </label>
+                        ))}
+                      </div>
+                      <div className="mt-4 rounded-xl border border-[#e0e3e7] bg-[#f7f9fa] p-4">
+                        <p className="text-sm font-bold text-[#0c0c0d]">Summary / Preview</p>
+                        <div className="mt-3 flex items-center justify-between text-sm font-semibold">
+                          <span>{invoiceBuilderForm.itemName}</span>
+                          <span>{formatPayPalCurrency(invoiceBuilderTotal, 'USD')}</span>
+                        </div>
+                      </div>
+                      <button type="submit" className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-full bg-[#0070e0] px-4 text-sm font-bold text-white transition hover:bg-[#003087]">
+                        Send sandbox invoice
+                      </button>
+                      <div className="mt-3 flex flex-wrap gap-3">
+                        <Link to="/miniapp/invoices?provider=paypal" className="text-sm font-bold text-[#0070e0] hover:underline">
+                          Back to invoices
+                        </Link>
+                        <button type="button" className="text-sm font-bold text-[#0070e0] hover:underline">
+                          New invoice
+                        </button>
+                      </div>
+                    </form>
+                  </aside>
+                </div>
+              ) : null}
+
+              {paypalOperationsTab === 'payouts' ? (
+                <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_330px]">
+                  <section className="min-w-0 rounded-xl border border-[#e0e3e7] bg-white p-5">
+                    <div className="rounded-xl border border-[#b8d8fb] bg-[#eef6ff] p-4">
+                      <p className="text-sm font-bold uppercase text-[#003087]">Batch payouts</p>
+                      <h3 className="mt-1 text-2xl font-bold text-[#0c0c0d]">Send a payout</h3>
+                      <p className="mt-2 text-sm font-semibold leading-6 text-[#2c2e2f]">
+                        Upload a sandbox CSV or TXT file, add recipient messaging, then submit the batch for sandbox processing.
+                      </p>
+                    </div>
+
+                    <form onSubmit={submitSandboxPayoutFile} className="mt-5 grid gap-5 2xl:grid-cols-[minmax(0,1fr)_280px]">
+                      <div className="grid gap-4">
+                        <div className="rounded-xl border border-dashed border-[#9bbce8] bg-[#f7fbff] p-5">
+                          <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                              <p className="text-base font-bold text-[#0c0c0d]">Upload payout file</p>
+                              <p className="mt-1 text-sm font-semibold leading-6 text-[#687173]">
+                                Accepted formats mirror PayPal Sandbox payout upload testing: CSV or TXT.
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={chooseSandboxPayoutFile}
+                              className="inline-flex h-11 items-center justify-center rounded-full border border-[#0070e0] px-4 text-sm font-bold text-[#0070e0] transition hover:bg-[#eef6ff]"
+                            >
+                              Choose CSV/TXT file
+                            </button>
+                          </div>
+                          <p className="mt-3 break-all rounded-lg bg-white px-3 py-2 text-sm font-bold text-[#2c2e2f]">
+                            {payoutUploadName || 'No file selected'}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={downloadSandboxPayoutSample}
+                            className="mt-3 inline-flex items-center gap-2 text-sm font-bold text-[#0070e0] transition hover:underline"
+                          >
+                            <FileText size={15} />
+                            Download sample CSV
+                          </button>
+                        </div>
+
+                        <label className="block">
+                          <span className="text-sm font-bold text-[#2c2e2f]">Custom email subject</span>
+                          <input
+                            type="text"
+                            value={payoutMessageForm.subject}
+                            onChange={(event) => updatePayoutMessageField('subject', event.target.value)}
+                            className="mt-2 h-12 w-full rounded border border-[#92979d] bg-white px-3 text-base font-semibold text-[#0c0c0d] outline-none transition focus:border-[#0070e0] focus:ring-2 focus:ring-[#0070e0]/20"
+                          />
+                        </label>
+
+                        <label className="block">
+                          <span className="text-sm font-bold text-[#2c2e2f]">Custom email message</span>
+                          <textarea
+                            value={payoutMessageForm.message}
+                            onChange={(event) => updatePayoutMessageField('message', event.target.value)}
+                            rows={4}
+                            className="mt-2 w-full rounded border border-[#92979d] bg-white px-3 py-3 text-base font-semibold text-[#0c0c0d] outline-none transition focus:border-[#0070e0] focus:ring-2 focus:ring-[#0070e0]/20"
+                          />
+                        </label>
+
+                        <label className="flex items-start gap-3 rounded-xl border border-[#e0e3e7] bg-[#f7f9fa] p-4 text-sm font-semibold leading-6 text-[#2c2e2f]">
+                          <input
+                            type="checkbox"
+                            checked={payoutAcknowledged}
+                            onChange={(event) => setPayoutAcknowledged(event.target.checked)}
+                            className="mt-1"
+                          />
+                          I confirm this sandbox payout file uses test recipients and test money only.
+                        </label>
+
+                        <button
+                          type="submit"
+                          disabled={!payoutAcknowledged}
+                          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#0070e0] px-5 text-base font-bold text-white transition hover:bg-[#003087] disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <Send size={16} />
+                          Continue
+                        </button>
+                      </div>
+
+                      <aside className="grid content-start gap-4">
+                        {[
+                          ['Batch requirements', 'sender_batch_id, receiver email, amount, currency, and note are required for each sandbox item.'],
+                          ['Payout status', 'Batch and item lookups use sandbox payout IDs, item IDs, and idempotent retry references.']
+                        ].map(([title, detail]) => (
+                          <div key={title} className="rounded-xl border border-[#e0e3e7] bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.06)]">
+                            <p className="text-sm font-bold text-[#0c0c0d]">{title}</p>
+                            <p className="mt-2 text-xs font-semibold leading-5 text-[#687173]">{detail}</p>
+                          </div>
+                        ))}
+                        <div className="rounded-xl border border-[#e0e3e7] bg-white p-4">
+                          <p className="text-sm font-bold text-[#0c0c0d]">FAQ</p>
+                          <div className="mt-3 grid gap-3">
+                            {paypalSandboxPayoutFaqs.map(([question, answer]) => (
+                              <details key={question} className="rounded-lg bg-[#f7f9fa] px-3 py-2">
+                                <summary className="cursor-pointer text-xs font-bold text-[#003087]">{question}</summary>
+                                <p className="mt-2 text-xs font-semibold leading-5 text-[#687173]">{answer}</p>
+                              </details>
+                            ))}
+                          </div>
+                        </div>
+                      </aside>
+                    </form>
+                  </section>
+
+                  <aside className="grid content-start gap-4">
+                    <div className="rounded-xl border border-[#e0e3e7] bg-white p-5">
+                      <p className="text-base font-bold text-[#0c0c0d]">Recent payout batches</p>
+                      <p className="mt-2 text-sm font-semibold leading-6 text-[#687173]">
+                        Track batch IDs, item IDs, status, receiver, and sender_batch_id from sandbox payout submissions.
+                      </p>
+                    </div>
+                    {paypalSandboxPayoutBatches.map((batch) => (
+                      <article key={batch.id} className="rounded-xl border border-[#e0e3e7] bg-white p-5">
+                        <div className="flex flex-wrap items-start justify-between gap-4">
+                          <div>
+                            <p className="text-sm font-bold text-[#003087]">{batch.id}</p>
+                            <h3 className="mt-2 text-xl font-bold text-[#0c0c0d]">{formatPayPalCurrency(batch.amount, batch.currency)} to {batch.receiver}</h3>
+                            <p className="mt-2 text-sm font-semibold text-[#687173]">
+                              Sender batch {batch.senderBatchId} · Payout item {batch.itemId}
+                            </p>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            <span className="rounded-full bg-[#eef6ff] px-3 py-1 text-xs font-bold text-[#003087]">
+                              Batch {batch.batchStatus}
+                            </span>
+                            <span className="rounded-full bg-[#e8f8f0] px-3 py-1 text-xs font-bold text-[#137333]">
+                              Item {batch.itemStatus}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          <button type="button" className="rounded-full border border-[#0070e0] px-4 py-2 text-sm font-bold text-[#0070e0] transition hover:bg-[#f5faff]">
+                            View batch
+                          </button>
+                          <button type="button" className="rounded-full border border-[#d6d9dc] px-4 py-2 text-sm font-bold text-[#003087] transition hover:border-[#0070e0]">
+                            Fetch item status
+                          </button>
+                          {batch.itemStatus === 'Pending' ? (
+                            <button type="button" className="rounded-full border border-[#d6d9dc] px-4 py-2 text-sm font-bold text-[#8f2b0f] transition hover:bg-[#fff7f5]">
+                              Cancel pending item
+                            </button>
+                          ) : null}
+                        </div>
+                      </article>
+                    ))}
+                  </aside>
+                </div>
+              ) : null}
+
+              {paypalOperationsTab === 'tracking' ? (
+                <div className="mt-5 grid gap-5 xl:grid-cols-[330px_minmax(0,1fr)]">
+                  <aside className="grid content-start gap-5">
+                    <form onSubmit={trackSandboxTransaction} className="rounded-xl border border-[#e0e3e7] bg-white p-5">
+                      <label className="block">
+                        <span className="text-sm font-bold text-[#2c2e2f]">Transaction or reference ID</span>
+                        <input
+                          type="text"
+                          value={trackingQuery}
+                          onChange={(event) => {
+                            setTrackingQuery(event.target.value);
+                            setTrackingStatus('idle');
+                          }}
+                          className="mt-2 h-12 w-full rounded border border-[#92979d] bg-white px-3 text-base font-semibold text-[#0c0c0d] outline-none transition focus:border-[#0070e0] focus:ring-2 focus:ring-[#0070e0]/20"
+                        />
+                      </label>
+                      {trackingStatus === 'error' ? (
+                        <p className="mt-2 text-xs font-bold text-[#8f2b0f]" role="alert">Enter a transaction ID to track.</p>
+                      ) : null}
+                      <button
+                        type="submit"
+                        disabled={trackingStatus === 'loading'}
+                        className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#0070e0] px-4 text-sm font-bold text-white transition hover:bg-[#003087] disabled:cursor-not-allowed disabled:opacity-70"
+                      >
+                        {trackingStatus === 'loading' ? <RefreshCw size={15} className="animate-spin" /> : <Search size={15} />}
+                        Track payment
+                      </button>
+                      <div className="mt-4 rounded-xl bg-[#f7f9fa] p-4 text-xs font-bold leading-6 text-[#687173]">
+                        GET /v1/payments/payouts/:id<br />
+                        GET /v1/payments/payouts-item/:payout_item_id<br />
+                        GET /v2/invoicing/invoices/:id
+                      </div>
+                    </form>
+                    <div className="rounded-xl border border-[#e0e3e7] bg-white p-5">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-bold text-[#687173]">Tracking result</p>
+                          <h3 className="mt-1 text-xl font-bold text-[#0c0c0d]">
+                            {trackingStatus === 'found' || paymentConfirmation ? trackingQuery : 'Awaiting lookup'}
+                          </h3>
+                        </div>
+                        <span className="rounded-full bg-[#e8f8f0] px-3 py-1 text-xs font-bold text-[#137333]">
+                          Completed
+                        </span>
+                      </div>
+                      <div className="mt-5 grid gap-4">
+                        {paypalSandboxTimeline.map((step, index) => (
+                          <div key={step.label} className="flex gap-3">
+                            <span className="mt-1 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#0070e0] text-xs font-bold text-white">
+                              {index + 1}
+                            </span>
+                            <div>
+                              <p className="text-sm font-bold text-[#0c0c0d]">{step.label}</p>
+                              <p className="mt-1 text-sm font-semibold leading-6 text-[#687173]">{step.detail}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </aside>
+
+                  <section className="min-w-0 rounded-xl border border-[#e0e3e7] bg-white p-5">
+                    <div className="flex flex-wrap items-start justify-between gap-4">
+                      <div>
+                        <p className="text-sm font-bold uppercase text-[#687173]">Activity</p>
+                        <h3 className="mt-1 text-2xl font-bold text-[#0c0c0d]">Transactions</h3>
+                        <p className="mt-2 text-sm font-semibold leading-6 text-[#687173]">
+                          Search and expand sandbox wallet activity across payments, invoices, and payout items.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={downloadSandboxTransactionCsv}
+                        className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[#0070e0] px-4 text-sm font-bold text-[#0070e0] transition hover:bg-[#f5faff]"
+                      >
+                        <FileText size={15} />
+                        Download
+                      </button>
+                    </div>
+
+                    <div className="mt-5 grid gap-3 md:grid-cols-[minmax(0,1fr)_180px]">
+                      <label className="block min-w-0">
+                        <span className="text-xs font-bold text-[#687173]">Search transactions</span>
+                        <input
+                          type="search"
+                          value={transactionSearch}
+                          onChange={(event) => setTransactionSearch(event.target.value)}
+                          className="mt-1 h-11 w-full rounded border border-[#92979d] px-3 text-sm font-semibold outline-none focus:border-[#0070e0] focus:ring-2 focus:ring-[#0070e0]/20"
+                        />
+                      </label>
+                      <label className="block min-w-0">
+                        <span className="text-xs font-bold text-[#687173]">Transaction status</span>
+                        <select
+                          value={transactionFilter}
+                          onChange={(event) => setTransactionFilter(event.target.value)}
+                          className="mt-1 h-11 w-full rounded border border-[#92979d] px-3 text-sm font-bold outline-none focus:border-[#0070e0] focus:ring-2 focus:ring-[#0070e0]/20"
+                        >
+                          {transactionFilterOptions.map((status) => <option key={status}>{status}</option>)}
+                        </select>
+                      </label>
+                    </div>
+
+                    <div className="mt-4 overflow-x-auto rounded-xl border border-[#e0e3e7]">
+                      <table className="w-full min-w-[780px] border-separate border-spacing-0 text-left text-sm">
+                        <thead className="bg-[#f7f9fa] text-xs font-bold uppercase text-[#687173]">
+                          <tr>
+                            <th className="px-5 py-3">Date</th>
+                            <th className="px-5 py-3">Type</th>
+                            <th className="px-5 py-3">Name</th>
+                            <th className="px-5 py-3">Status</th>
+                            <th className="px-5 py-3 text-right">Amount</th>
+                            <th className="px-5 py-3">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredPaypalTransactions.map((transaction) => (
+                            <React.Fragment key={transaction.id}>
+                              <tr className="font-semibold text-[#0c0c0d] transition hover:bg-[#f8f9fb]">
+                                <td className="border-t border-[#edf0f2] px-5 py-4 text-[#687173]">{transaction.date}</td>
+                                <td className="border-t border-[#edf0f2] px-5 py-4">
+                                  <p className="font-bold">{transaction.type}</p>
+                                  <p className="mt-1 text-xs text-[#687173]">{transaction.id}</p>
+                                </td>
+                                <td className="border-t border-[#edf0f2] px-5 py-4">
+                                  <p>{transaction.party}</p>
+                                  <p className="mt-1 text-xs text-[#687173]">{transaction.email}</p>
+                                </td>
+                                <td className="border-t border-[#edf0f2] px-5 py-4">
+                                  <span className={`rounded-full px-2 py-1 text-[11px] font-bold ${
+                                    transaction.status === 'Completed'
+                                      ? 'bg-[#e8f8f0] text-[#137333]'
+                                      : 'bg-[#fff6e5] text-[#8a5300]'
+                                  }`}>
+                                    {transaction.status}
+                                  </span>
+                                </td>
+                                <td className={`border-t border-[#edf0f2] px-5 py-4 text-right font-bold ${
+                                  transaction.amount < 0 ? 'text-[#0c0c0d]' : 'text-[#137333]'
+                                }`}>
+                                  {formatPayPalCurrency(transaction.amount, transaction.currency)}
+                                </td>
+                                <td className="border-t border-[#edf0f2] px-5 py-4">
+                                  <button
+                                    type="button"
+                                    onClick={() => setExpandedTransactionId((current) => (current === transaction.id ? '' : transaction.id))}
+                                    className="rounded-full border border-[#d6d9dc] px-3 py-1.5 text-xs font-bold text-[#003087] transition hover:border-[#0070e0] hover:bg-[#f5faff]"
+                                    aria-label={`Details ${transaction.id}`}
+                                  >
+                                    Details
+                                  </button>
+                                </td>
+                              </tr>
+                              {expandedTransactionId === transaction.id ? (
+                                <tr>
+                                  <td colSpan={6} className="border-t border-[#edf0f2] bg-[#f7f9fa] px-5 py-4">
+                                    <div className="grid gap-3 text-sm font-semibold text-[#687173] md:grid-cols-3">
+                                      <div>
+                                        <p className="text-xs font-bold uppercase text-[#687173]">Reference</p>
+                                        <p className="mt-1 break-all text-[#0c0c0d]">{transaction.reference}</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-xs font-bold uppercase text-[#687173]">Source</p>
+                                        <p className="mt-1 text-[#0c0c0d]">{transaction.source}</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-xs font-bold uppercase text-[#687173]">Details</p>
+                                        <p className="mt-1 text-[#0c0c0d]">{transaction.details}</p>
+                                      </div>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ) : null}
+                            </React.Fragment>
+                          ))}
+                        </tbody>
+                      </table>
+                      {!filteredPaypalTransactions.length ? (
+                        <div className="border-t border-[#edf0f2] px-5 py-8 text-center">
+                          <Search size={24} className="mx-auto text-[#687173]" />
+                          <p className="mt-3 text-sm font-bold text-[#2c2e2f]">No transactions match this view.</p>
+                          <p className="mt-1 text-xs font-semibold text-[#687173]">Clear the search or choose another status filter.</p>
+                        </div>
+                      ) : null}
+                    </div>
+                  </section>
                 </div>
               ) : null}
             </section>
